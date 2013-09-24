@@ -2,18 +2,60 @@ window.Smila = function(){
 
     function Smila(){};
 
+    // SETTINGS
+    var useWebGL = false;
+    var imagePath = "";
+    var defaultOutlineColor = {r:255,g:0,b:0,a:255};
+
+    /**
+     *
+     * @param options {object}
+     * {
+     *      useWebGL : {Boolean}
+     *      imagePath : {String}
+     * }
+     */
+    Smila.Settings = function(options){
+        useWebGL = options.useWebGL || false;
+        imagePath = options.imagePath || "";
+        defaultOutlineColor = options.defaultOutlineColor || {r:255,g:0,b:0,a:255};
+    };
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    //       C L A S S E S
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    /**
+     *
+     * @type {Function}
+     */
     var Sprite = Smila.Sprite = function (){
 
     };
 
+    Sprite.prototype.render = function(context){
+
+    };
+
+    /**
+     *
+     * @type {Function}
+     */
     var Animation = Smila.Animation = function(){
 
     };
 
+    /**
+     *
+     * @type {Function}
+     */
     var Map = Smila.Map = function(){
 
     };
 
+    /**
+     *
+     * @type {Function}
+     */
     var Camera = Smila.Camera = function(){
 
     };
@@ -42,7 +84,26 @@ window.Smila = function(){
          * @return {Smila.DataStore}
          */
         put : function(spriteData, callback) {
+            if (spriteData instanceof Array){
+                var acc = [];
+                spriteData.forEach(function(element){
+                    loadSprite(element, function(){
+                        acc.push(0);
+                        if (acc.length === spriteData.length){
+                            callback();
+                        }
+                    }, function(){
+                        throw "[Smila::Datastore->put] cannot put element into Datastore";
+                    })
+                });
 
+            }else{
+                loadSprite(spriteData, function(){
+                    callback();
+                }, function(){
+                    throw "[Smila::Datastore->put] cannot put element into Datastore";
+                })
+            }
 
             return DataStore;
         },
@@ -87,15 +148,42 @@ window.Smila = function(){
     };
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    // P R I V A T E  H E L P E R  F U N C T I O N S
+    // P R I V A T E   H E L P E R   F U N C T I O N S
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    /**
+     * @param spriteData { ... }
+     * @param callback {function} (Sprite)
+     */
+    var loadSprite = function(spriteData, callback){
+        log("[Smila::*->loadSprite]");
+    };
 
     var loadDataStoreFromLocalStorage = function(){
 
     };
 
+    var polyfills = function(){
+
+    };
+
+    var log = function(message){
+        console.log(message);
+    };
+
+    /**
+     *
+     * @param spriteData
+     * @param successCallback {function}
+     * @param errorCallback {function}
+     */
+    var loadSprite = function(spriteData, successCallback, errorCallback){
+
+    };
+
 
     loadDataStoreFromLocalStorage();
+    polyfills();
 
     return Smila;
 }();
