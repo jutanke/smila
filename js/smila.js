@@ -188,8 +188,13 @@ window.Smila = function(){
             spriteCache[spriteData.key] = {meta:spriteData, canvas:canvas};
             // ~~~ outline? ~~~
             if( spriteData.o ){
+                // todo: better save at ONE spot into one object
                 var key = spriteData.key + "_outline";
-
+                if (! (key in spriteCache)){
+                    var outlined = document.createElement('canvas');
+                    outlined.width = img.width;
+                    outlined.height = img.height;
+                }
             }
 
 
