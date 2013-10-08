@@ -9,6 +9,8 @@ window.Smila = function () {
     var defaultOutlineColor = {r:255, g:0, b:0, a:255};
     var verbose;
 
+    var EXPECTED_ELAPSED_MILLIS = Math.floor(1000/60);
+
     /**
      *
      * @param options {object}
@@ -131,8 +133,10 @@ window.Smila = function () {
     };
 
 
-    var onUpdateCallbacks = {};
+    var updateCallbacks = {};
+    var renderItems = {};
     var onUpdateCallbackPointer = 0;
+    var map = null;
 
     var rendererIsRunning = false;
 
@@ -168,15 +172,21 @@ window.Smila = function () {
          */
         onUpdate:function (callback) {
             callback.$smilaId = onUpdateCallbackPointer++;
-            onUpdateCallbacks[callback.$smilaId] = callback;
+            updateCallbacks[callback.$smilaId] = callback;
         },
 
         offUpdate:function (callback) {
             if ('$smilaId' in callback) {
-                delete onUpdateCallbacks[callback.$smilaId];
+                delete updateCallbacks[callback.$smilaId];
             } else {
                 throw "[Smila::DataStore->offUpdate] cannot find the ID for the callback given at {onCallback}";
             }
+        },
+
+        reset : function(){
+            updateCallbacks = {};
+            renderItems = {};
+            map = null;
         },
 
         isRunning : function(){
@@ -200,7 +210,7 @@ window.Smila = function () {
                     dimension.w = canvas.width;
                     parent.appendChild(canvas);
 
-                    canvas.onmousemove = function(target,evt){
+                    canvas.onmousemove = function(evt){
                         var rect = canvas.getBoundingClientRect();
                         mousePosition.x = evt.clientX - rect.left;
                         mousePosition.y = evt.clientY - rect.top;
@@ -213,7 +223,8 @@ window.Smila = function () {
                         }
                     }
 
-                    thread = requestAnimationFrame.call(Renderer, this.update);
+                    //thread = requestAnimationFrame.call(Renderer, this.update);
+                    thread = requestAnimationFrame(this.update);
 
                     log("[Smila::Renderer->start] = success");
                 }else{
@@ -226,10 +237,23 @@ window.Smila = function () {
             }
         },
 
-        bla : "hallowelt",
-
         update : function(){
-            console.log(this.bla);
+            var now = new Date().getTime(),
+                elapsed = now - (Renderer.time || now);
+            Renderer.time = now;
+            var dt = elapsed / EXPECTED_ELAPSED_MILLIS;
+
+            for(var key in renderItems){
+                var item = renderItems[key];
+
+            }
+
+            for(var key in updateCallbacks){
+                var callback = updateCallbacks[key];
+                callback.call(callback, elapsed,dt);
+            }
+
+            requestAnimationFrame(Renderer.update);
         }
 
     };
@@ -465,8 +489,10 @@ window.Smila = function () {
 
     };
 
-    var polyfills = function () {
-
+    var polyFill = function () {
+        var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
+            window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+        window.requestAnimationFrame = requestAnimationFrame;
     };
 
     var log = function (message) {
@@ -475,7 +501,7 @@ window.Smila = function () {
 
 
     loadDataStoreFromLocalStorage();
-    polyfills();
+    polyFill();
 
     return Smila;
 }();
