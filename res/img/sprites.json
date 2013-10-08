@@ -1,0 +1,28 @@
+{"frames": {
+
+"character_o_b_64x64.png":
+{
+	"frame": {"x":270,"y":2,"w":172,"h":252},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":14,"y":6,"w":172,"h":252},
+	"sourceSize": {"w":202,"h":266}
+},
+"tileset_32_32__1.png":
+{
+	"frame": {"x":2,"y":2,"w":266,"h":1162},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":266,"h":1162},
+	"sourceSize": {"w":266,"h":1162}
+}},
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker ",
+	"version": "1.0",
+	"image": "sprites.png",
+	"format": "RGBA8888",
+	"size": {"w":512,"h":2048},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:b0f6ca176ab5b3bd0fb7837348c7a825:1/1$"
+}
+}
