@@ -9,7 +9,7 @@ window.Smila = function () {
     var defaultOutlineColor = {r:255, g:0, b:0, a:255};
     var verbose;
 
-    var EXPECTED_ELAPSED_MILLIS = Math.floor(1000/60);
+    var EXPECTED_ELAPSED_MILLIS = Math.floor(1000 / 60);
 
     /**
      *
@@ -37,34 +37,36 @@ window.Smila = function () {
         this.img = canvas;
         this.frameHeight = spriteData.h;
         this.frameWidth = spriteData.w;
-        if(spriteData.o == true){
+        if (spriteData.o == true) {
             // when a outline for this sprite is specified, we will take it
             this.imgOutlined = spriteCache[spriteData.key + "_outline"].canvas;
         }
-        if (spriteData.bm){
+        if (spriteData.bm) {
             // if a bitmask for this sprite is specified, we will take it
             this.bitmask = spriteCache[spriteData.key + "_bitmask"];
+        } else {
+            this.bitmask = null;
         }
-        this.ox = 0|0;
-        this.oy = 0|0;
+        this.ox = 0 | 0;
+        this.oy = 0 | 0;
         this.zIndexByYPos = true;
-        this.x = 0|0;
-        this.y = 0|0;
-        this.z = 0|0;
-        this.mouseOver = null;
+        this.x = 0 | 0;
+        this.y = 0 | 0;
+        this.z = 0 | 0;
         this.mouseEnter = null;
         this.mouseLeave = null;
         this._mouseIsActive = false;
         this._outline = false;
+        this.angleInRadians = 0;
     };
 
-    Sprite.prototype.onmouseenter = function(callback){
+    Sprite.prototype.onmouseenter = function (callback) {
         this._mouseIsActive = true;
         this.mouseEnter = callback;
         return this;
     };
 
-    Sprite.prototype.onmouseleave = function(callback){
+    Sprite.prototype.onmouseleave = function (callback) {
         this._mouseIsActive = true;
         this.mouseLeave = callback;
         return this;
@@ -74,12 +76,12 @@ window.Smila = function () {
      * @param outline {Boolean}
      * @return {Sprite}
      */
-    Sprite.prototype.outline = function(outline){
+    Sprite.prototype.outline = function (outline) {
         this._outline = outline;
         return this;
     };
 
-    Sprite.prototype.subimage = function(x,y){
+    Sprite.prototype.subimage = function (x, y) {
         this.ox = x;
         this.oy = y;
         return this;
@@ -91,16 +93,16 @@ window.Smila = function () {
      * @param y
      * @return {Sprite} || {Position}
      */
-    Sprite.prototype.position = function(x,y){
-        if (arguments.length > 0){
+    Sprite.prototype.position = function (x, y) {
+        if (arguments.length > 0) {
             this.x = x;
             this.y = y;
             return this;
         }
-        return {x:this.x, y : this.y};
+        return {x:this.x, y:this.y};
     };
 
-    Sprite.prototype.toCanvas = function(){
+    Sprite.prototype.toCanvas = function () {
         var canvas = document.createElement('canvas');
         canvas.height = this.frameHeight;
         canvas.width = this.frameWidth;
@@ -113,30 +115,67 @@ window.Smila = function () {
         this.x = oldX;
         this.y = oldY;
         return canvas;
+        this._mouseIsOver = false;
     };
 
-    Sprite.prototype.toBase64 = function(){
+    Sprite.prototype.toBase64 = function () {
         return this.img.toDataURL();
     };
 
     Sprite.prototype.render = function (context) {
-        if (this._mouseIsActive){
-            var mousePos = getAbsoluteMousePosition();
-            if (this.mouseEnter !== null){
-                //if (mousePos.x >= )
+        if (this._mouseIsActive) {
+            if (this.mouseEnter !== null || this.mouseLeave !== null) {
+                var mousePos = getAbsoluteMousePosition();
+                var currentMouseIsOver = false;
+                if (mousePos.x >= this.x && mousePos.y >= this.y) {
+                    if (mousePos.x <= (this.x + this.frameWidth) && mousePos.y <= (this.y + this.frameHeight)) {
+                        if (this.bitmask === null) {
+                            currentMouseIsOver = true;
+                        } else {
+                            if (this.isPixel(mousePos.x, mousePos.y)){
+                                currentMouseIsOver = true;
+                            }
+                        }
+                    }
+                }
+                if (this._mouseIsOver !== currentMouseIsOver){
+                    if (currentMouseIsOver){
+                        if (this.mouseEnter !== null) this.mouseEnter.call(this);
+                    }else{
+                        if (this.mouseLeave !== null) this.mouseLeave.call(this);
+                    }
+                    this._mouseIsOver = currentMouseIsOver;
+                }
             }
         }
 
-
+        var sx = this.ox * this.frameWidth;
+        var sy = this.oy * this.frameHeight;
+        var x = (0.5 + this.x) << 0;
+        var y = (0.5 + this.y) << 0;
+        if (this.zIndexByYPos) this.z = y + (this.frameHeight/2);
+        context.translate(x,y);
+        context.rotate(this.angleInRadians);
+        try{
+            if (this._outline){
+                context.drawImage(this.imgOutlined,sx,sy,this.frameHeight,this.frameWidth,0,0,this.frameWidth,this.frameHeight);
+            }else{
+                context.drawImage(this.img, sx, sy, this.frameHeight, this.frameWidth, 0, 0, this.frameWidth, this.frameHeight);
+            }
+        }catch (e){
+            console.error(e);
+        }
+        context.rotate(-this.angleInRadians);
+        context.translate(-x,-y);
     };
 
     /**
      *  Tests, if a pixel got hit by absolute x y
      */
-    Sprite.isPixel = function(x,y){
-        var normalizedX = x - this.x + (this.ox * this.frameWidth)
-        var normalizedY = y - this.y + (this.oy * this.frameHeight)
-        return this.bitmask.test(normalizedX,normalizedY);
+    Sprite.isPixel = function (x, y) {
+        var normalizedX = x - this.x + (this.ox * this.frameWidth);
+        var normalizedY = y - this.y + (this.oy * this.frameHeight);
+        return this.bitmask.test(normalizedX, normalizedY);
     };
 
     /**
@@ -160,27 +199,27 @@ window.Smila = function () {
      * @type {Function}
      */
     var Camera = Smila.Camera = function () {
-        this.offset = {x:0,y:0};
-        this.realPosition = {x:0,y:0};
+        this.offset = {x:0, y:0};
+        this.realPosition = {x:0, y:0};
     };
 
-    Camera.prototype.translate = function(offsetX, offsetY){
+    Camera.prototype.translate = function (offsetX, offsetY) {
         this.offset.x = offsetX;
         this.offset.y = offsetY;
         this.realPosition.x -= offsetX;
         this.realPosition.y -= offsetY;
     };
 
-    Camera.prototype.render = function(){
+    Camera.prototype.render = function () {
         context.translate(this.offset.x, this.offset.y);
     };
 
-    Camera.prototype.set = function(x,y){
+    Camera.prototype.set = function (x, y) {
         var transX = this.realPosition.x - x;
         var transY = this.realPosition.y - y;
-        this.translate(transX,transY);
+        this.translate(transX, transY);
         this.render();
-        this.translate(0,0);
+        this.translate(0, 0);
     };
 
     /**
@@ -262,7 +301,7 @@ window.Smila = function () {
     var rendererIsRunning = false;
 
     var stats = null;
-    var dimension = {w:-1,h:-1};
+    var dimension = {w:-1, h:-1};
 
     /**
      * The global Canvas, on that all content is renderered
@@ -278,7 +317,7 @@ window.Smila = function () {
      */
     var thread = -1;
 
-    var mousePosition = {x:-1,y:-1};
+    var mousePosition = {x:-1, y:-1};
 
     /**
      * @type {Boolean} It is not allowed to start the renderer twice
@@ -306,23 +345,23 @@ window.Smila = function () {
             }
         },
 
-        reset : function(){
+        reset:function () {
             updateCallbacks = {};
             renderItems = [];
             map = null;
         },
 
-        isRunning : function(){
+        isRunning:function () {
             return rendererIsRunning;
         },
 
-        start : function(){
+        start:function () {
             log("[Smila::Renderer->start]");
-            if (isStarted){
+            if (isStarted) {
                 throw "[Smila::Renderer->start] The Renderer is already started!";
-            }else{
+            } else {
 
-                if (window.CanvasRenderingContext2D){
+                if (window.CanvasRenderingContext2D) {
 
                     var parent = document.getElementById(ELEMENT_NAME);
                     canvas = document.createElement('canvas');
@@ -333,14 +372,14 @@ window.Smila = function () {
                     dimension.w = canvas.width;
                     parent.appendChild(canvas);
 
-                    canvas.onmousemove = function(evt){
+                    canvas.onmousemove = function (evt) {
                         var rect = canvas.getBoundingClientRect();
                         mousePosition.x = evt.clientX - rect.left;
                         mousePosition.y = evt.clientY - rect.top;
                     };
                     context = canvas.getContext('2d');
-                    if(verbose){
-                        if (typeof Stats !== 'undefined'){
+                    if (verbose) {
+                        if (typeof Stats !== 'undefined') {
                             stats = new Stats();
                             document.body.appendChild(stats.domElement);
                         }
@@ -348,7 +387,7 @@ window.Smila = function () {
                     thread = requestAnimationFrame(this.update);
 
                     log("[Smila::Renderer->start] = success");
-                }else{
+                } else {
                     document.getElementById(ELEMENT_NAME).innerHTML = "[smila] is not supported!";
                     log("[Smila::Renderer->start] = failed");
                 }
@@ -358,20 +397,19 @@ window.Smila = function () {
             }
         },
 
-        update : function(){
+        update:function () {
             var now = new Date().getTime(),
                 elapsed = now - (Renderer.time || now);
             Renderer.time = now;
             var dt = elapsed / EXPECTED_ELAPSED_MILLIS;
 
 
-
-            for(var key in updateCallbacks){
+            for (var key in updateCallbacks) {
                 var callback = updateCallbacks[key];
-                callback.call(callback, elapsed,dt);
+                callback.call(callback, elapsed, dt);
             }
 
-            for(var i = 0; i < renderItems; i++){
+            for (var i = 0; i < renderItems; i++) {
                 var drawable = renderItems[i];
 
             }
@@ -498,9 +536,9 @@ window.Smila = function () {
                     var data = context.getImageData(0, 0, img.width, img.height);
                     for (var x = 0; x < img.width; x++) {
                         for (var y = 0; y < img.height; y++) {
-                            var pixel = getPixel(data,x,y);
-                            if(pixel.a !== 0){
-                                bitmask.set(x,y);
+                            var pixel = getPixel(data, x, y);
+                            if (pixel.a !== 0) {
+                                bitmask.set(x, y);
                             }
                         }
                     }
@@ -610,13 +648,13 @@ window.Smila = function () {
      * Gets the absolute mouse position..
      * @return {Object} { x: ..., y: ... }
      */
-    var getAbsoluteMousePosition = function(){
-        if (camera !== null){
+    var getAbsoluteMousePosition = function () {
+        if (camera !== null) {
             return {
                 x:(camera.realPosition.x + mousePosition.x),
                 y:(camera.realPosition.y + mousePosition.y)
             };
-        }else{
+        } else {
             return mousePosition;
         }
     };
