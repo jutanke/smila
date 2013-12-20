@@ -9,6 +9,14 @@
 
     window.onload = function(){
         Smila.Renderer.start();
+
+        Smila.DataStore.put({src:"res/img/character.png", w:64,h:64,key:"character", o:true, bm:true}, function(){
+
+            var sprite = Smila.DataStore.get("character");
+            debugger
+
+        });
+
     };
 
 </script>

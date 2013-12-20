@@ -34,11 +34,109 @@ window.Smila = function () {
      * @type {Function}
      */
     var Sprite = Smila.Sprite = function (canvas, spriteData) {
+        this.img = canvas;
+        this.frameHeight = spriteData.h;
+        this.frameWidth = spriteData.w;
+        if(spriteData.o == true){
+            // when a outline for this sprite is specified, we will take it
+            this.imgOutlined = spriteCache[spriteData.key + "_outline"].canvas;
+        }
+        if (spriteData.bm){
+            // if a bitmask for this sprite is specified, we will take it
+            this.bitmask = spriteCache[spriteData.key + "_bitmask"];
+        }
+        this.ox = 0|0;
+        this.oy = 0|0;
+        this.zIndexByYPos = true;
+        this.x = 0|0;
+        this.y = 0|0;
+        this.z = 0|0;
+        this.mouseOver = null;
+        this.mouseEnter = null;
+        this.mouseLeave = null;
+        this._mouseIsActive = false;
+        this._outline = false;
+    };
 
+    Sprite.prototype.onmouseenter = function(callback){
+        this._mouseIsActive = true;
+        this.mouseEnter = callback;
+        return this;
+    };
+
+    Sprite.prototype.onmouseleave = function(callback){
+        this._mouseIsActive = true;
+        this.mouseLeave = callback;
+        return this;
+    };
+
+    /**
+     * @param outline {Boolean}
+     * @return {Sprite}
+     */
+    Sprite.prototype.outline = function(outline){
+        this._outline = outline;
+        return this;
+    };
+
+    Sprite.prototype.subimage = function(x,y){
+        this.ox = x;
+        this.oy = y;
+        return this;
+    };
+
+    /**
+     * If no parameters are passed, this function gives the position of the sprite, else it sets its position
+     * @param x
+     * @param y
+     * @return {Sprite} || {Position}
+     */
+    Sprite.prototype.position = function(x,y){
+        if (arguments.length > 0){
+            this.x = x;
+            this.y = y;
+            return this;
+        }
+        return {x:this.x, y : this.y};
+    };
+
+    Sprite.prototype.toCanvas = function(){
+        var canvas = document.createElement('canvas');
+        canvas.height = this.frameHeight;
+        canvas.width = this.frameWidth;
+        var ctx = canvas.getContext('2d');
+        var oldX = this.x;
+        var oldY = this.y;
+        this.x = 0;
+        this.y = 0;
+        this.render(ctx);
+        this.x = oldX;
+        this.y = oldY;
+        return canvas;
+    };
+
+    Sprite.prototype.toBase64 = function(){
+        return this.img.toDataURL();
     };
 
     Sprite.prototype.render = function (context) {
+        if (this._mouseIsActive){
+            var mousePos = getAbsoluteMousePosition();
+            if (this.mouseEnter !== null){
+                //if (mousePos.x >= )
+            }
+        }
 
+
+    };
+
+    /**
+     *  Tests, if a pixel got hit by absolute x y
+     */
+    Sprite.isPixel = function(x,y){
+        var normalizedX = x - this.x + (this.ox * this.frameWidth)
+        var normalizedY = y - this.y + (this.oy * this.frameHeight)
+        return this.bitmask.test(normalizedX,normalizedY);
     };
 
     /**
@@ -62,18 +160,40 @@ window.Smila = function () {
      * @type {Function}
      */
     var Camera = Smila.Camera = function () {
+        this.offset = {x:0,y:0};
+        this.realPosition = {x:0,y:0};
+    };
 
+    Camera.prototype.translate = function(offsetX, offsetY){
+        this.offset.x = offsetX;
+        this.offset.y = offsetY;
+        this.realPosition.x -= offsetX;
+        this.realPosition.y -= offsetY;
+    };
+
+    Camera.prototype.render = function(){
+        context.translate(this.offset.x, this.offset.y);
+    };
+
+    Camera.prototype.set = function(x,y){
+        var transX = this.realPosition.x - x;
+        var transY = this.realPosition.y - y;
+        this.translate(transX,transY);
+        this.render();
+        this.translate(0,0);
     };
 
     /**
      * Private Cache for DataStore
      * @type {Object}
      * {
-     *      key : { data: { .. }, canvas: { HTMLCanvas } }
+     *      key : { meta: { .. }, canvas: { HTMLCanvas } }
      *      ...
      * }
      */
     var spriteCache = {};
+
+    var camera = null;
 
     var DataStore = Smila.DataStore = {
 
@@ -104,7 +224,7 @@ window.Smila = function () {
                         }
                     }, function () {
                         throw "[Smila::Datastore->put] cannot put element into Datastore";
-                    })
+                    });
                 });
 
             } else {
@@ -125,7 +245,8 @@ window.Smila = function () {
          */
         get:function (key) {
             if (key in spriteCache) {
-                return spriteCache[key];
+                var data = spriteCache[key];
+                return new Sprite(data.canvas, data.meta);
             }
             throw "[Smila::DataStore->get] cannot find {" + key + "}";
         }
@@ -134,7 +255,7 @@ window.Smila = function () {
 
 
     var updateCallbacks = {};
-    var renderItems = {};
+    var renderItems = [];
     var onUpdateCallbackPointer = 0;
     var map = null;
 
@@ -148,6 +269,8 @@ window.Smila = function () {
      * @type {HTML5Canvas}
      */
     var canvas = null;
+
+    var context = null;
 
     /**
      * The requestanimationframe-Thread
@@ -185,7 +308,7 @@ window.Smila = function () {
 
         reset : function(){
             updateCallbacks = {};
-            renderItems = {};
+            renderItems = [];
             map = null;
         },
 
@@ -215,15 +338,13 @@ window.Smila = function () {
                         mousePosition.x = evt.clientX - rect.left;
                         mousePosition.y = evt.clientY - rect.top;
                     };
-
+                    context = canvas.getContext('2d');
                     if(verbose){
                         if (typeof Stats !== 'undefined'){
                             stats = new Stats();
                             document.body.appendChild(stats.domElement);
                         }
                     }
-
-                    //thread = requestAnimationFrame.call(Renderer, this.update);
                     thread = requestAnimationFrame(this.update);
 
                     log("[Smila::Renderer->start] = success");
@@ -243,14 +364,16 @@ window.Smila = function () {
             Renderer.time = now;
             var dt = elapsed / EXPECTED_ELAPSED_MILLIS;
 
-            for(var key in renderItems){
-                var item = renderItems[key];
 
-            }
 
             for(var key in updateCallbacks){
                 var callback = updateCallbacks[key];
                 callback.call(callback, elapsed,dt);
+            }
+
+            for(var i = 0; i < renderItems; i++){
+                var drawable = renderItems[i];
+
             }
 
             requestAnimationFrame(Renderer.update);
@@ -261,8 +384,6 @@ window.Smila = function () {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // P R I V A T E   H E L P E R   F U N C T I O N S
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    var INTEGER_BYTESIZE = 4;
 
     //
     // ++++++++++  B I T M A T R I X ++++++++++
@@ -374,7 +495,7 @@ window.Smila = function () {
                 var key = spriteData.key + "_bitmask";
                 if (!(key in spriteCache)) {
                     var bitmask = new BitMatrix2D(img.width, img.height);
-                    var data = canvas.getImageData(0, 0, img.width, img.height);
+                    var data = context.getImageData(0, 0, img.width, img.height);
                     for (var x = 0; x < img.width; x++) {
                         for (var y = 0; y < img.height; y++) {
                             var pixel = getPixel(data,x,y);
@@ -402,7 +523,7 @@ window.Smila = function () {
             log("[Smila::*->loadSprite] load from base64: {" + spriteData.key + "}");
             img.src = spriteData.base64;
         } else {
-            log("[Smila::*->loadSprite] load from URL: {" + spriteData.key + "}");
+            log("[Smila::*->loadSprite] load from URL: {" + spriteData.key + "} {" + spriteData.src + "}");
             img.src = imagePath + spriteData.src;
         }
 
@@ -456,7 +577,7 @@ window.Smila = function () {
                      }
                      }*/
                     if (doBottomCheck) {
-                        var bottomPixel = pxyu.tools.getPixel(data, x, y + 1);
+                        var bottomPixel = getPixel(data, x, y + 1);
                         if (bottomPixel.a !== 0) {
                             setPixel(data, x, y, color.r, color.g, color.b, color.a);
                             continue;
@@ -465,7 +586,7 @@ window.Smila = function () {
 
                     // then left-right.. (so the up-down gets not confused with the left-right)
                     if (doLeftcheck) {
-                        var leftPixel = pxyu.tools.getPixel(data, x - 1, y);
+                        var leftPixel = getPixel(data, x - 1, y);
                         if (leftPixel.a !== 0) {
                             setPixel(data, x, y, color.r, color.g, color.b, color.a);
                             x += 1;
@@ -473,7 +594,7 @@ window.Smila = function () {
                         }
                     }
                     if (doRightcheck) {
-                        var rightPixel = pxyu.tools.getPixel(data, x + 1, y);
+                        var rightPixel = getPixel(data, x + 1, y);
                         if (rightPixel.a !== 0) {
                             setPixel(data, x, y, color.r, color.g, color.b, color.a);
                             continue;
@@ -483,6 +604,21 @@ window.Smila = function () {
             }
         }
         return data;
+    };
+
+    /**
+     * Gets the absolute mouse position..
+     * @return {Object} { x: ..., y: ... }
+     */
+    var getAbsoluteMousePosition = function(){
+        if (camera !== null){
+            return {
+                x:(camera.realPosition.x + mousePosition.x),
+                y:(camera.realPosition.y + mousePosition.y)
+            };
+        }else{
+            return mousePosition;
+        }
     };
 
     var loadDataStoreFromLocalStorage = function () {
