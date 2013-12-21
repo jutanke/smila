@@ -5,6 +5,7 @@
 </head>
 <script src="libs/stats.js"></script>
 <script src="js/smila.js"></script>
+<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
 <script>
 
     window.onload = function(){
@@ -14,6 +15,12 @@
         Smila.DataStore.put({src:"res/img/character.png", w:64,h:64,key:"character", o:true, bm:true}, function(){
 
             var sprite = Smila.DataStore.get("character");
+
+            Smila.Renderer.add(sprite);
+
+
+
+
 
 
         });

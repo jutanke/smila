@@ -355,6 +355,10 @@ window.Smila = function () {
             return rendererIsRunning;
         },
 
+        add:function(sprite){
+            renderItems.push(sprite);
+        },
+
         start:function () {
             log("[Smila::Renderer->start]");
             if (isStarted) {
@@ -409,12 +413,12 @@ window.Smila = function () {
                 callback.call(callback, elapsed, dt);
             }
 
-            for (var i = 0; i < renderItems; i++) {
+            for (var i = 0; i < renderItems.length; i++) {
                 var drawable = renderItems[i];
-
+                drawable.render(context);
             }
 
-            requestAnimationFrame(Renderer.update);
+            thread = requestAnimationFrame(Renderer.update);
         }
 
     };
@@ -478,6 +482,13 @@ window.Smila = function () {
     //
     // ++++++++++  B I T M A T R I X  END ++++++++++
     //
+
+    // Array-Helpers
+
+
+
+
+    // Array-Helpers End
 
     /**
      * @param spriteData
