@@ -390,6 +390,8 @@ window.Smila = function () {
                     }
                     thread = requestAnimationFrame(this.update);
 
+                    camera = new Camera();
+
                     log("[Smila::Renderer->start] = success");
                 } else {
                     document.getElementById(ELEMENT_NAME).innerHTML = "[smila] is not supported!";
@@ -401,12 +403,25 @@ window.Smila = function () {
             }
         },
 
+        camera : function(){
+            return camera;
+        },
+
         update:function () {
             var now = new Date().getTime(),
                 elapsed = now - (Renderer.time || now);
             Renderer.time = now;
             var dt = elapsed / EXPECTED_ELAPSED_MILLIS;
+            var cameraRealX = camera.realPosition.x;
+            var cameraRealY = camera.realPosition.y;
+            var w = dimension.w + 20;
+            var h = dimension.h + 20;
+            var clearX = cameraRealX - 10;
+            var clearY = cameraRealY - 10;
 
+            context.clearRect(clearX, clearY, w, h);
+
+            camera.render();
 
             for (var key in updateCallbacks) {
                 var callback = updateCallbacks[key];
@@ -420,7 +435,6 @@ window.Smila = function () {
 
             thread = requestAnimationFrame(Renderer.update);
         }
-
     };
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

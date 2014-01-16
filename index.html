@@ -8,11 +8,34 @@
 <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
 <script>
 
-    window.onload = function(){
+    window.onload = function () {
+
+        document.onkeydown = function(e){
+            switch (e.keyCode){
+                case 65:    // a
+                    Smila.Renderer.camera().translate(-1,0);
+                    break;
+                case 68:    // d
+                    Smila.Renderer.camera().translate(1,0);
+                    break;
+                case 87:    // w
+                    Smila.Renderer.camera().translate(0,-1);
+                    break;
+                case 83:    // s
+                    Smila.Renderer.camera().translate(0,1);
+                    break;
+                default :
+                    Smila.Renderer.camera().translate(0,0);
+            }
+        }
+
+        document.onkeyup = function(e){
+            Smila.Renderer.camera().translate(0,0);
+        }
 
         Smila.Renderer.start();
 
-        Smila.DataStore.put({src:"res/img/character.png", w:64,h:64,key:"character", o:true, bm:true}, function(){
+        Smila.DataStore.put({src:"res/img/character.png", w:64, h:64, key:"character", o:true, bm:true}, function () {
 
             var sprite = Smila.DataStore.get("character");
 
@@ -21,6 +44,7 @@
 
 
 
+            var sprite2 = Smila.DataStore.get("character");
 
 
         });
@@ -29,6 +53,6 @@
 
 </script>
 <body>
-    <div style="width:800px; height:600px;" id="smila"></div>
+<div style="width:800px; height:600px;" id="smila"></div>
 </body>
 </html>
