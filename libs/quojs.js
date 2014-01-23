@@ -60,7 +60,6 @@
         var mx = Math.min(Math.floor((dimension.x + dimension.w) / this.cellWidth),this.w);
         var y = Math.max(Math.floor(dimension.y / this.cellHeight), 0);
         var my = Math.min(Math.floor((dimension.y + dimension.h) / this.cellHeight),this.h);
-        console.log(x + " | " + mx + " | " + y + " | " + my);
         if(x>mx || y>my){
             if(this.outOfBoundsCell === null) return [];
             var result = [];

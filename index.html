@@ -5,12 +5,28 @@
 </head>
 <script src="libs/stats.js"></script>
 <script src="libs/quojs.js"></script>
+<script src="libs/keys.js"></script>
 <script src="js/smila.js"></script>
 <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+<style>
+    *{
+        margin:0;
+        padding:0;
+    }
+    .stats{
+        position: absolute;
+        top:0;
+        right:0;
+    }
+</style>
 <script>
 
     window.onload = function () {
 
+
+        $('#smila').width($(window).width()).height($(window).height());
+
+        /*
         document.onkeydown = function(e){
             switch (e.keyCode){
                 case 65:    // a
@@ -33,6 +49,7 @@
         document.onkeyup = function(e){
             Smila.Renderer.camera().translate(0,0);
         }
+        */
 
         Smila.Settings({verbose:true});
 
@@ -51,7 +68,22 @@
             Smila.Renderer.add(sprite2);
             sprite2.position(100,0);
 
+            Smila.Renderer.onUpdate(function(dt, elapsed){
 
+                var offsetY = 0;
+                var offsetX = 0;
+                if(isKeyPressed(KEY.ARROW_UP)){
+                    offsetY += 0.2 * dt;
+                } if(isKeyPressed(KEY.ARROW_DOWN)){
+                    offsetY -= 0.2 * dt;
+                } if(isKeyPressed(KEY.ARROW_RIGHT)){
+                    offsetX -= 0.2 * dt;
+                } if(isKeyPressed(KEY.ARROW_LEFT)){
+                    offsetX += 0.2 * dt;
+                }
+                Smila.Renderer.camera().translate(offsetX,offsetY);
+
+            });
 
         });
 
