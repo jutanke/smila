@@ -356,6 +356,7 @@ window.Smila = function () {
             updateCallbacks = {};
             renderItems = new Quo.Grid(quoDimension.gw, quoDimension.gh, quoDimension.w, quoDimension.h);
             map = null;
+            clearInterval(this.gridQuery);
         },
 
         isRunning:function () {
