@@ -158,9 +158,9 @@ window.Smila = function () {
         context.rotate(this.angleInRadians);
         try{
             if (this._outline){
-                context.drawImage(this.imgOutlined,sx,sy,this.frameHeight,this.frameWidth,0,0,this.frameWidth,this.frameHeight);
+                context.drawImage(this.imgOutlined,sx,sy,this.frameWidth,this.frameHeight,0,0,this.frameWidth,this.frameHeight);
             }else{
-                context.drawImage(this.img, sx, sy, this.frameHeight, this.frameWidth, 0, 0, this.frameWidth, this.frameHeight);
+                context.drawImage(this.img,sx,sy,this.frameWidth,this.frameHeight,0,0,this.frameWidth,this.frameHeight);
             }
         }catch (e){
             console.error(e);
@@ -434,6 +434,7 @@ window.Smila = function () {
             }
 
             thread = requestAnimationFrame(Renderer.update);
+            if(stats !== null) stats.update();
         }
     };
 

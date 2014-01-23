@@ -33,6 +33,8 @@
             Smila.Renderer.camera().translate(0,0);
         }
 
+        Smila.Settings({verbose:true});
+
         Smila.Renderer.start();
 
         Smila.DataStore.put({src:"res/img/character.png", w:64, h:64, key:"character", o:true, bm:true}, function () {
@@ -45,6 +47,9 @@
 
 
             var sprite2 = Smila.DataStore.get("character");
+            Smila.Renderer.add(sprite2);
+            sprite2.position(100,0);
+
 
 
         });
@@ -53,6 +58,6 @@
 
 </script>
 <body>
-<div style="width:800px; height:600px;" id="smila"></div>
+<div style="width:400px; height:400px;" id="smila"></div>
 </body>
 </html>
