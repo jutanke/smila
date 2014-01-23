@@ -13,18 +13,49 @@
         margin:0;
         padding:0;
     }
+
+    #bg{
+        background: #45484d; /* Old browsers */
+        background: -moz-linear-gradient(top,  #45484d 0%, #000000 100%); /* FF3.6+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#45484d), color-stop(100%,#000000)); /* Chrome,Safari4+ */
+        background: -webkit-linear-gradient(top,  #45484d 0%,#000000 100%); /* Chrome10+,Safari5.1+ */
+        background: -o-linear-gradient(top,  #45484d 0%,#000000 100%); /* Opera 11.10+ */
+        background: -ms-linear-gradient(top,  #45484d 0%,#000000 100%); /* IE10+ */
+        background: linear-gradient(to bottom,  #45484d 0%,#000000 100%); /* W3C */
+        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#45484d', endColorstr='#000000',GradientType=0 ); /* IE6-9 */
+
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top:0;
+        left:0;
+    }
+
     .stats{
         position: absolute;
         top:0;
         right:0;
     }
+
+    canvas {
+        background-color: white;
+    }
+
+    #smila{
+        position: absolute;
+        left:50%;
+        margin-left:-25%;
+        top:200px;
+    }
+
 </style>
 <script>
 
     window.onload = function () {
 
 
-        $('#smila').width($(window).width()).height($(window).height());
+        //$('#smila').width($(window).width()).height($(window).height());
+
 
         /*
         document.onkeydown = function(e){
@@ -59,6 +90,14 @@
 
             var sprite = Smila.DataStore.get("character");
 
+            for(var i = 0; i < 1000;i++){
+                var spr = Smila.DataStore.get("character");
+                Smila.Renderer.add(spr);
+                var x = getRandomInt(0,3000);
+                var y = getRandomInt(0,3000);
+                spr.position(x,y);
+            }
+
             Smila.Renderer.add(sprite);
 
 
@@ -66,7 +105,7 @@
 
             var sprite2 = Smila.DataStore.get("character");
             Smila.Renderer.add(sprite2);
-            sprite2.position(100,0);
+            sprite2.position(10,-5);
 
             Smila.Renderer.onUpdate(function(dt, elapsed){
 
@@ -81,6 +120,7 @@
                 } if(isKeyPressed(KEY.ARROW_LEFT)){
                     offsetX += 0.2 * dt;
                 }
+
                 Smila.Renderer.camera().translate(offsetX,offsetY);
 
             });
@@ -89,8 +129,18 @@
 
     };
 
+    /**
+     * Returns a random integer between min and max
+     * Using Math.round() will give you a non-uniform distribution!
+     */
+    function getRandomInt (min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
 </script>
 <body>
-<div style="width:400px; height:400px;" id="smila"></div>
+<div id="bg">
+    <div style="width:400px; height:400px;" id="smila"></div>
+</div>
 </body>
 </html>

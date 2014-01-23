@@ -12,7 +12,7 @@ window.Smila = function () {
      * Initial Dimension for saving the Sprites ( (3000*5) X (2000*5))
      * @type {{gw: number, gh: number, w: number, h: number}}
      */
-    var quoDimension = {gw:500,gh:2000,w:5,h:5};
+    var quoDimension = {gw:5000,gh:2000,w:5,h:5};
 
     var EXPECTED_ELAPSED_MILLIS = Math.floor(1000 / 60);
 
@@ -212,8 +212,13 @@ window.Smila = function () {
     Camera.prototype.translate = function (offsetX, offsetY) {
         this.offset.x = offsetX;
         this.offset.y = offsetY;
-        this.realPosition.x -= offsetX;
-        this.realPosition.y -= offsetY;
+        if(offsetX === 0 && offsetY === 0){
+            this.realPosition.x = Math.round(this.realPosition.x);
+            this.realPosition.y = Math.round(this.realPosition.y);
+        }else{
+            this.realPosition.x -= offsetX;
+            this.realPosition.y -= offsetY;
+        }
     };
 
     Camera.prototype.render = function () {
@@ -333,6 +338,55 @@ window.Smila = function () {
 
     var ELEMENT_NAME = "smila";
 
+    /**
+     * Default sort function. Sorts sprites after there y values.
+     * @param sprites
+     * @constructor
+     */
+    var SORT_BY_Y_VALUE = function(sprites){
+        return quickSort(sprites,0,sprites.length);
+    };
+
+    // ---------------
+    // -- QUICKSORT --
+    // ---------------
+    //TODO remove recursion
+
+    function partition(array, left, right){
+        var cmp = array[right - 1].y, minEnd = left, maxEnd;
+        for(maxEnd = left; maxEnd < right -1;maxEnd += 1){
+            if(array[maxEnd].y <= cmp){
+                swap(array,maxEnd,minEnd);
+                minEnd += 1;
+            }
+        }
+        swap(array,minEnd,right - 1);
+        return minEnd;
+    };
+
+    function swap(array, i, j){
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+        return array;
+    };
+
+    function quickSort(array,left,right){
+        if(left < right){
+            var p = partition(array,left,right);
+            quickSort(array,left,p);
+            quickSort(array,p+1,right);
+        }
+        return array;
+    };
+
+
+    // ---------------
+    // -- QUICKSORT --
+    // ---------------
+
+    var sortFunction = SORT_BY_Y_VALUE;
+
     var Renderer = Smila.Renderer = {
 
         /**
@@ -352,11 +406,22 @@ window.Smila = function () {
             }
         },
 
+        /**
+         * the function gets called every time the engine returns a new set of sprites that should be rendered
+         * onto the screen. The callback has one parameter which holds the array of sprites that will be rendered
+         * onto the screen. The return-value of the callback will be the sorted list
+         * @param callback {function} [Sprite]->[Sprite]  //sorted
+         */
+        onSortSprites:function(callback){
+            sortFunction = callback;
+        },
+
         reset:function () {
             updateCallbacks = {};
             renderItems = new Quo.Grid(quoDimension.gw, quoDimension.gh, quoDimension.w, quoDimension.h);
             map = null;
             clearInterval(this.gridQuery);
+            sortFunction = SORT_BY_Y_VALUE
         },
 
         isRunning:function () {
@@ -419,9 +484,15 @@ window.Smila = function () {
                     camera = new Camera();
 
                     this.gridQuery = setInterval(function(){
-                        spritesInView = renderItems.query(
-                            {x:camera.realPosition.x,y:camera.realPosition.y,w:dimension.w,h:dimension.h});
-                        // todo SORT
+                        spritesInView = sortFunction(
+                            renderItems.query(
+                            {
+                                x:camera.realPosition.x,
+                                y:camera.realPosition.y,
+                                w:dimension.w,
+                                h:dimension.h
+                            })
+                        );
                     },500);
 
                     log("[Smila::Renderer->start] = success");
