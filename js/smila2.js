@@ -79,14 +79,14 @@ window.Smila = function () {
 
                     // setup a rectangle from 10,20 to 80,30 in pixels
                     /*
-                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-                        10, 20,
-                        80, 20,
-                        10, 30,
-                        10, 30,
-                        80, 20,
-                        80, 30]), gl.STATIC_DRAW);
-                        */
+                     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+                     10, 20,
+                     80, 20,
+                     10, 30,
+                     10, 30,
+                     80, 20,
+                     80, 30]), gl.STATIC_DRAW);
+                     */
 
 
                     gl.enableVertexAttribArray(positionLocation);
@@ -101,23 +101,95 @@ window.Smila = function () {
             }
         },
 
-        drawRect : function(x,y,w,h){
-            if(!rendererIsStarted) throw "[Smila::Renderer]->drawRect | Cannot draw Rectangle without the Renderer beeing started!";
+        /**
+         * draws a Rectangle onto the canvas
+         */
+        drawRect:function (x, y, w, h) {
+            if (!rendererIsStarted) throw "[Smila::Renderer]->drawRect | Cannot draw Rectangle without the Renderer beeing started!";
             var x1 = x;
             var x2 = x + w;
             var y1 = y;
             var y2 = y + h;
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-                x1,y1,x2,y1,x1,y2,x1,y2,x2,y1,x2,y2
-            ]),gl.STATIC_DRAW);
-            gl.uniform4f(colorLocation, 255,0,0,1);
-            gl.drawArrays(gl.TRIANGLES,0,6);
+                x1, y1, x2, y1, x1, y2, x1, y2, x2, y1, x2, y2
+            ]), gl.STATIC_DRAW);
+            gl.uniform4f(colorLocation, 255, 0, 0, 1);
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+        },
+
+
+        drawSprite:function (img) {
+            var positionLocation = gl.getAttribLocation(program, "a_position");
+            var texCoordLocation = gl.getAttribLocation(program, "a_texCoord");
+
+            // look up where the vertex data needs to go.
+            var positionLocation = gl.getAttribLocation(program, "a_position");
+            var texCoordLocation = gl.getAttribLocation(program, "a_texCoord");
+
+            // provide texture coordinates for the rectangle.
+            var texCoordBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+                0.0, 0.0,
+                1.0, 0.0,
+                0.0, 1.0,
+                0.0, 1.0,
+                1.0, 0.0,
+                1.0, 1.0]), gl.STATIC_DRAW);
+            gl.enableVertexAttribArray(texCoordLocation);
+            gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
+
+            // Create a texture.
+            var texture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+
+            // Set the parameters so we can render any size image.
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+            // Upload the image into the texture.
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+
+            // lookup uniforms
+            var resolutionLocation = gl.getUniformLocation(program, "u_resolution");
+
+            // set the resolution
+            gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+
+            // Create a buffer for the position of the rectangle corners.
+            var buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.enableVertexAttribArray(positionLocation);
+            gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+            // Set a rectangle the same size as the image.
+            setRectangle(gl, 20, 0, img.width, img.height);
+
+            // Draw the rectangle.
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+
         }
     };
 
     //*************************************************************************
     // H E L P E R  F U N C T I O N
     //*************************************************************************
+
+    function setRectangle(gl, x, y, width, height) {
+        var x1 = x;
+        var x2 = x + width;
+        var y1 = y;
+        var y2 = y + height;
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+            x1, y1,
+            x2, y1,
+            x1, y2,
+            x1, y2,
+            x2, y1,
+            x2, y2]), gl.STATIC_DRAW);
+    }
 
     /**
      * Loads a shader from a script tag.
@@ -192,7 +264,7 @@ window.Smila = function () {
      * @param {!Array.<string>} opt_attribs The attribs names.
      * @param {!Array.<number>} opt_locations The locations for the attribs.
      */
-    var loadProgram = function(gl, shaders, opt_attribs, opt_locations) {
+    var loadProgram = function (gl, shaders, opt_attribs, opt_locations) {
         var program = gl.createProgram();
         for (var ii = 0; ii < shaders.length; ++ii) {
             gl.attachShader(program, shaders[ii]);
@@ -211,7 +283,7 @@ window.Smila = function () {
         var linked = gl.getProgramParameter(program, gl.LINK_STATUS);
         if (!linked) {
             // something went wrong with the link
-            lastError = gl.getProgramInfoLog (program);
+            lastError = gl.getProgramInfoLog(program);
             error("Error in program linking:" + lastError);
 
             gl.deleteProgram(program);
@@ -224,7 +296,7 @@ window.Smila = function () {
      * Wrapped logging function.
      * @param {string} msg The message to log.
      */
-    var error = function(msg) {
+    var error = function (msg) {
         if (window.console) {
             if (window.console.error) {
                 window.console.error(msg);
