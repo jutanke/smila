@@ -1,4 +1,3 @@
-
 /**
  * Impl overtime-swaps
  *
@@ -7,93 +6,237 @@
  * Date: 23.01.14
  * Time: 23:00
  */
-window.Smila = function(){
+window.Smila = function () {
 
     var VERBOSE = true;
+    var ELEMENT_NAME = "smila";
 
-    function Smila(){};
+    function Smila() {
+    };
 
-    // :::::::::::::::::::::::
-    // Smila.Renderer::PRIVATE
-    // :::::::::::::::::::::::
 
     var rendererIsStarted = false;
+    var canvas = null;
+    var gl = null;
+    var colorLocation = null;
+    var resolutionLocation = null;
+    var positionLocation = null;
+    var buffer;
+    var program;
 
+    /**
+     *
+     * @type {Object}
+     */
     Smila.Renderer = {
 
         /**
          * Amount of Sprites the Renderer can take for the beginning
          */
-        startSize : 100,
+        startSize:100,
 
-        start : function(){
+        start:function () {
             log("[Smila::Renderer]->start")
-            if(rendererIsStarted) throw "[Smila::Renderer]->start : Already started!";
-            else{
-                if(window.CanvasRenderingContext2D){
+            if (rendererIsStarted) throw "[Smila::Renderer]->start : Already started!";
+            else {
+                var parent = document.getElementById(ELEMENT_NAME);
+                canvas = document.createElement('canvas');
+                canvas.height = parent.clientHeight;
+                canvas.width = parent.clientWidth;
+                parent.appendChild(canvas);
 
-                }else{
-                    log("[Smila::Renderer]->start | failed, canvas2d not supported");
+                try {
+                    gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+                } catch (e) {
+                    log("[Smila::Renderer]->start | Webgl-Error: " + e);
+                }
+
+                if (gl) {
+                    rendererIsStarted = true;
+
+                    //todo inject shaders
+
+
+                    // setup a GLSL program
+                    var vertexShader = createShaderFromScript(gl, "2d-vertex-shader");
+                    var fragmentShader = createShaderFromScript(gl, "2d-fragment-shader");
+                    program = loadProgram(gl, [vertexShader, fragmentShader]);
+                    gl.useProgram(program);
+
+                    // look up where the vertex data needs to go.
+                    positionLocation = gl.getAttribLocation(program, "a_position");
+
+                    // Create a buffer and put a single clipspace rectangle in
+                    // it (2 triangles)
+                    buffer = gl.createBuffer();
+                    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+
+
+                    // set the resolution
+                    resolutionLocation = gl.getUniformLocation(program, "u_resolution");
+                    gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+                    colorLocation = gl.getUniformLocation(program, "u_color");
+
+                    // setup a rectangle from 10,20 to 80,30 in pixels
+                    /*
+                    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+                        10, 20,
+                        80, 20,
+                        10, 30,
+                        10, 30,
+                        80, 20,
+                        80, 30]), gl.STATIC_DRAW);
+                        */
+
+
+                    gl.enableVertexAttribArray(positionLocation);
+                    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+                    // draw
+                    gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+                } else {
+                    log("[Smila::Renderer]->start | failed, webgl not supported");
                 }
             }
+        },
 
+        drawRect : function(x,y,w,h){
+            if(!rendererIsStarted) throw "[Smila::Renderer]->drawRect | Cannot draw Rectangle without the Renderer beeing started!";
+            var x1 = x;
+            var x2 = x + w;
+            var y1 = y;
+            var y2 = y + h;
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+                x1,y1,x2,y1,x1,y2,x1,y2,x2,y1,x2,y2
+            ]),gl.STATIC_DRAW);
+            gl.uniform4f(colorLocation, 255,0,0,1);
+            gl.drawArrays(gl.TRIANGLES,0,6);
         }
     };
 
-    // =====================================================
-    //
-    // ~~~~~~~ private Renderer-Functions
-    // =====================================================
-    // Sprite-Layout:
-    // [ID:2][X:2][Y:2][SX:2][SY:2][W:2][H:2][SPID:2][dX:1][dY:1]
-    var BYTE_PER_SPRITE = 18|0;
-    var SHORT_PER_SPRITE = (BYTE_PER_SPRITE/2)|0;
+    //*************************************************************************
+    // H E L P E R  F U N C T I O N
+    //*************************************************************************
 
     /**
-     *
-     * @param n {Integer} Number of Sprites
-     * @param oldRaw {ArrayBuffer}
-     * @param oldShort {Uint16Array}
-     * @param oldByte {Int8Array}
-     * @return {Object}
+     * Loads a shader from a script tag.
+     * @param {!WebGLContext} gl The WebGLContext to use.
+     * @param {string} scriptId The id of the script tag.
+     * @param {number} opt_shaderType The type of shader. If not passed in it will
+     *     be derived from the type of the script tag.
+     * @param {function(string): void) opt_errorCallback callback for errors.
+     * @return {!WebGLShader} The created shader.
      */
-    function createRaw(n, oldRaw, oldShort, oldByte){
-        var raw = new ArrayBuffer(n*BYTE_PER_SPRITE);
-        var rawTemp = new ArrayBuffer(BYTE_PER_SPRITE);
-        var uShortView = new Uint16Array(raw);
-        var byteView = new Int8Array(raw);
-        var uShortTempView = new Uint16Array(rawTemp);
-        if(typeof oldRaw !== 'undefined' ){
-            var l = oldRaw.byteLength / BYTE_PER_SPRITE;
-            for(var i = 0; i < l; i = i++){
-                setSpriteToRaw(uShortView,byteView,i,getSpriteFromRaw(oldShort,oldByte,i));
+    var createShaderFromScript = function (gl, scriptId, opt_shaderType, opt_errorCallback) {
+        var shaderSource = "";
+        var shaderType;
+        var shaderScript = document.getElementById(scriptId);
+        if (!shaderScript) {
+            throw("*** Error: unknown script element" + scriptId);
+        }
+        shaderSource = shaderScript.text;
+
+        if (!opt_shaderType) {
+            if (shaderScript.type == "x-shader/x-vertex") {
+                shaderType = gl.VERTEX_SHADER;
+            } else if (shaderScript.type == "x-shader/x-fragment") {
+                shaderType = gl.FRAGMENT_SHADER;
+            } else if (shaderType != gl.VERTEX_SHADER && shaderType != gl.FRAGMENT_SHADER) {
+                throw("*** Error: unknown shader type");
+                return null;
             }
         }
-        return {
-            uShortView : uShortView,
-            byteView : byteView,
-            uShortTempView : uShortTempView,
-            raw : raw
-        };
+
+        return loadShader(
+            gl, shaderSource, opt_shaderType ? opt_shaderType : shaderType,
+            opt_errorCallback);
     };
 
-    // getID(uShortView, i)
-    // swapSprite(uShortView, uShortTempView,i,j)
-    // getSpriteFromRaw(uShortView, byteView, i)
-    // setSpriteToRaw(uShortView,byteView,i,id,x,y,sx,sy,w,h,spid,dx,dy)
+    /**
+     * Loads a shader.
+     * @param {!WebGLContext} gl The WebGLContext to use.
+     * @param {string} shaderSource The shader source.
+     * @param {number} shaderType The type of shader.
+     * @param {function(string): void) opt_errorCallback callback for errors.
+ * @return {!WebGLShader} The created shader.
+     */
+    var loadShader = function (gl, shaderSource, shaderType, opt_errorCallback) {
+        var errFn = opt_errorCallback || error;
+        // Create the shader object
+        var shader = gl.createShader(shaderType);
 
-    function getID(a,d){return a[SHORT_PER_SPRITE*d]}function swapSprite(a,d,c,b){c!==b&&(c*=SHORT_PER_SPRITE,b*=SHORT_PER_SPRITE,d[0]=a[c],d[1]=a[c+1],d[2]=a[c+2],d[3]=a[c+3],d[4]=a[c+4],d[5]=a[c+5],d[6]=a[c+6],d[7]=a[c+7],d[8]=a[c+8],a[c]=a[b],a[c+1]=a[b+1],a[c+2]=a[b+2],a[c+3]=a[b+3],a[c+4]=a[b+4],a[c+5]=a[b+5],a[c+6]=a[b+6],a[c+7]=a[b+7],a[c+8]=a[b+8],a[b]=d[0],a[b+1]=d[1],a[b+2]=d[2],a[b+3]=d[3],a[b+4]=d[4],a[b+5]=d[5],a[b+6]=d[6],a[b+7]=d[7],a[b+8]=d[8])}
-    function getSpriteFromRaw(a,d,c){var b=SHORT_PER_SPRITE*c;c*=BYTE_PER_SPRITE;return{id:a[b],x:a[b+1],y:a[b+2],sx:a[b+3],sy:a[b+4],w:a[b+5],h:a[b+6],spid:a[b+7],dx:d[c+16],dy:d[c+17]}}
-    function setSpriteToRaw(a,d,c,b,g,h,k,l,m,n,p,q,r){var e=SHORT_PER_SPRITE*c,f=BYTE_PER_SPRITE*c;4===arguments.length?(a[e]=b.id,a[e+1]=b.x,a[e+2]=b.y,a[e+3]=b.sx,a[e+4]=b.sy,a[e+5]=b.w,a[e+6]=b.h,a[e+7]=b.spid,d[f+16]=b.dx,d[f+17]=b.dy):(a[e]=b,a[e+1]=g,a[e+2]=h,a[e+3]=k,a[e+4]=l,a[e+5]=m,a[e+6]=n,a[e+7]=p,d[f+16]=q,d[f+17]=r)};
+        // Load the shader source
+        gl.shaderSource(shader, shaderSource);
 
+        // Compile the shader
+        gl.compileShader(shader);
 
-    // =====================================================
-    // ~~~~~~~ private Renderer-Functions End
-    //
-    // =====================================================
+        // Check the compile status
+        var compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+        if (!compiled) {
+            // Something went wrong during compilation; get the error
+            lastError = gl.getShaderInfoLog(shader);
+            errFn("*** Error compiling shader '" + shader + "':" + lastError);
+            gl.deleteShader(shader);
+            return null;
+        }
+
+        return shader;
+    };
+
+    /**
+     * Creates a program, attaches shaders, binds attrib locations, links the
+     * program and calls useProgram.
+     * @param {!Array.<!WebGLShader>} shaders The shaders to attach
+     * @param {!Array.<string>} opt_attribs The attribs names.
+     * @param {!Array.<number>} opt_locations The locations for the attribs.
+     */
+    var loadProgram = function(gl, shaders, opt_attribs, opt_locations) {
+        var program = gl.createProgram();
+        for (var ii = 0; ii < shaders.length; ++ii) {
+            gl.attachShader(program, shaders[ii]);
+        }
+        if (opt_attribs) {
+            for (var ii = 0; ii < opt_attribs.length; ++ii) {
+                gl.bindAttribLocation(
+                    program,
+                    opt_locations ? opt_locations[ii] : ii,
+                    opt_attribs[ii]);
+            }
+        }
+        gl.linkProgram(program);
+
+        // Check the link status
+        var linked = gl.getProgramParameter(program, gl.LINK_STATUS);
+        if (!linked) {
+            // something went wrong with the link
+            lastError = gl.getProgramInfoLog (program);
+            error("Error in program linking:" + lastError);
+
+            gl.deleteProgram(program);
+            return null;
+        }
+        return program;
+    };
+
+    /**
+     * Wrapped logging function.
+     * @param {string} msg The message to log.
+     */
+    var error = function(msg) {
+        if (window.console) {
+            if (window.console.error) {
+                window.console.error(msg);
+            }
+            else if (window.console.log) {
+                window.console.log(msg);
+            }
+        }
+    };
 
     var log = function (message) {
-        if(VERBOSE) console.log(message);
+        if (VERBOSE) console.log(message);
     };
 
     // POLYFILLS
@@ -101,6 +244,7 @@ window.Smila = function(){
     var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
         window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
     window.requestAnimationFrame = requestAnimationFrame;
+
 
     return Smila;
 }();
