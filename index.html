@@ -42,10 +42,10 @@
     }
 
     #smila{
-        position: absolute;
+        /*position: absolute;
         left:50%;
         margin-left:-25%;
-        top:200px;
+        top:200px;*/
     }
 
 </style>
@@ -84,7 +84,7 @@
 
         Smila.Settings({
             verbose:true,
-            quoDimension:{gw:800,gh:800,w:25,h:25}
+            quoDimension:{gw:800,gh:800,w:10,h:10}
         });
 
         Smila.Renderer.start();
@@ -93,11 +93,11 @@
 
             var sprite = Smila.DataStore.get("character");
 
-            for(var i = 0; i < 10000;i++){
+            for(var i = 0; i < 2000;i++){
                 var spr = Smila.DataStore.get("character");
                 Smila.Renderer.add(spr);
-                var x = getRandomInt(0,12000);
-                var y = getRandomInt(0,12000);
+                var x = getRandomInt(0,1000);
+                var y = getRandomInt(0,1000);
                 spr.position(x,y);
             }
 
@@ -143,7 +143,7 @@
 </script>
 <body>
 <div id="bg">
-    <div style="width:400px; height:400px;" id="smila"></div>
+    <div style="width:800px; height:800px;" id="smila"></div>
 </div>
 </body>
 </html>

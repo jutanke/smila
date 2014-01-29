@@ -387,6 +387,8 @@ window.Smila = function () {
 
     var sortFunction = SORT_BY_Y_VALUE;
 
+    var renderLoopIndex = 0;
+
     var Renderer = Smila.Renderer = {
 
         /**
@@ -531,7 +533,7 @@ window.Smila = function () {
                 callback.call(callback, elapsed, dt);
             }
 
-            for (var i = 0; i < spritesInView.length; i++) {
+            for (var i = 0; i < spritesInView.length; i += 1) {
                 var drawable = spritesInView[i];
                 drawable.render(context);
             }
