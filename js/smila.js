@@ -8,11 +8,6 @@ window.Smila = function () {
     var imagePath = "";
     var defaultOutlineColor = {r:255, g:0, b:0, a:255};
     var verbose;
-    /**
-     * Initial Dimension for saving the Sprites ( (3000*5) X (2000*5))
-     * @type {{gw: number, gh: number, w: number, h: number}}
-     */
-    var quoDimension = {gw:5000,gh:2000,w:5,h:5};
 
     var EXPECTED_ELAPSED_MILLIS = Math.floor(1000 / 60);
 
@@ -29,7 +24,6 @@ window.Smila = function () {
         imagePath = options.imagePath || "";
         defaultOutlineColor = options.defaultOutlineColor || {r:255, g:0, b:0, a:255};
         verbose = options.verbose || false;
-        quoDimension = options.quoDimension || quoDimension;
     };
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -305,8 +299,7 @@ window.Smila = function () {
 
 
     var updateCallbacks = {};
-    var renderItems = null;
-    var spritesInView = [];
+    var renderItems = [];
     var onUpdateCallbackPointer = 0;
     var map = null;
 
@@ -420,9 +413,8 @@ window.Smila = function () {
 
         reset:function () {
             updateCallbacks = {};
-            renderItems = new Quo.Grid(quoDimension.gw, quoDimension.gh, quoDimension.w, quoDimension.h);
+            renderItems = [];
             map = null;
-            clearInterval(this.gridQuery);
             sortFunction = SORT_BY_Y_VALUE
         },
 
@@ -437,19 +429,7 @@ window.Smila = function () {
          * @param sprite
          */
         add:function(sprite){
-            //renderItems.push(sprite);
-            Quo.AABBify(sprite);
-            renderItems.add(sprite, true);
-        },
-
-        /**
-         * Add a static sprite to the Renderer. Position changes to
-         * this Sprite might not be tracked!
-         * @param sprite
-         */
-        addStatic:function(sprite){
-            Quo.AABBify(sprite);
-            renderItems.add(sprite,false);
+            renderItems.push(sprite);
         },
 
         start:function () {
@@ -459,7 +439,7 @@ window.Smila = function () {
             } else {
 
                 if (window.CanvasRenderingContext2D) {
-                    renderItems = new Quo.Grid(quoDimension.gw, quoDimension.gh, quoDimension.w, quoDimension.h);
+                    renderItems = [];
                     var parent = document.getElementById(ELEMENT_NAME);
                     canvas = document.createElement('canvas');
                     canvas.style.position = "absolute";
@@ -484,18 +464,6 @@ window.Smila = function () {
                     thread = requestAnimationFrame(this.update);
 
                     camera = new Camera();
-
-                    this.gridQuery = setInterval(function(){
-                        spritesInView = sortFunction(
-                            renderItems.query(
-                            {
-                                x:camera.realPosition.x,
-                                y:camera.realPosition.y,
-                                w:dimension.w,
-                                h:dimension.h
-                            })
-                        );
-                    },500);
 
                     log("[Smila::Renderer->start] = success");
                 } else {
@@ -523,6 +491,8 @@ window.Smila = function () {
             var h = dimension.h + 20;
             var clearX = cameraRealX - 10;
             var clearY = cameraRealY - 10;
+            var rightOuterBound = cameraRealX + dimension.w;
+            var bottomBound = cameraRealY + dimension.h;
 
             context.clearRect(clearX, clearY, w, h);
 
@@ -533,9 +503,13 @@ window.Smila = function () {
                 callback.call(callback, elapsed, dt);
             }
 
-            for (var i = 0; i < spritesInView.length; i += 1) {
-                var drawable = spritesInView[i];
-                drawable.render(context);
+            for (var i = 0; i < renderItems.length; i += 1) {
+                var drawable = renderItems[i];
+                if ((drawable.x + drawable.frameWidth|drawable.width) >= cameraRealX && drawable.x <= rightOuterBound){
+                    if ((drawable.y + drawable.frameHeight|drawable.height) >= cameraRealY && drawable.y <= bottomBound){
+                        drawable.render(context);
+                    }
+                }
             }
 
             thread = requestAnimationFrame(Renderer.update);

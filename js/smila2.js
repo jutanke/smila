@@ -10,6 +10,7 @@ window.Smila = function () {
 
     var VERBOSE = true;
     var ELEMENT_NAME = "smila";
+    var EXPECTED_ELAPSED_MILLIS = Math.floor(1000 / 60);
 
     function Smila() {
     };
@@ -23,12 +24,13 @@ window.Smila = function () {
     var positionLocation = null;
     var buffer;
     var program;
+    var thread = null;
 
     /**
      *
      * @type {Object}
      */
-    Smila.Renderer = {
+    var Renderer = Smila.Renderer = {
 
         /**
          * Amount of Sprites the Renderer can take for the beginning
@@ -92,13 +94,23 @@ window.Smila = function () {
                     gl.enableVertexAttribArray(positionLocation);
                     gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
-                    // draw
-                    gl.drawArrays(gl.TRIANGLES, 0, 6);
+                    thread = requestAnimationFrame(Renderer.update);
 
                 } else {
                     log("[Smila::Renderer]->start | failed, webgl not supported");
                 }
             }
+        },
+
+        update : function(){
+
+            var now = new Date().getTime(),
+                elapsed = now - (Renderer.time || now);
+            Renderer.time = now;
+            var dt = elapsed / EXPECTED_ELAPSED_MILLIS;
+
+            
+            thread = requestAnimationFrame(Renderer.update);
         },
 
         /**
@@ -119,8 +131,6 @@ window.Smila = function () {
 
 
         drawSprite:function (img) {
-            var positionLocation = gl.getAttribLocation(program, "a_position");
-            var texCoordLocation = gl.getAttribLocation(program, "a_texCoord");
 
             // look up where the vertex data needs to go.
             var positionLocation = gl.getAttribLocation(program, "a_position");

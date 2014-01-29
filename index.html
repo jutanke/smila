@@ -83,8 +83,7 @@
         */
 
         Smila.Settings({
-            verbose:true,
-            quoDimension:{gw:800,gh:800,w:10,h:10}
+            verbose:true
         });
 
         Smila.Renderer.start();
@@ -93,11 +92,11 @@
 
             var sprite = Smila.DataStore.get("character");
 
-            for(var i = 0; i < 2000;i++){
+            for(var i = 0; i < 10000;i++){
                 var spr = Smila.DataStore.get("character");
                 Smila.Renderer.add(spr);
-                var x = getRandomInt(0,1000);
-                var y = getRandomInt(0,1000);
+                var x = getRandomInt(0,8000);
+                var y = getRandomInt(0,8000);
                 spr.position(x,y);
             }
 
