@@ -158,6 +158,7 @@ window.Smila = function () {
         context.rotate(this.angleInRadians);
         try{
             if (this._outline){
+                console.log("yaa")
                 context.drawImage(this.imgOutlined,sx,sy,this.frameWidth,this.frameHeight,0,0,this.frameWidth,this.frameHeight);
             }else{
                 context.drawImage(this.img,sx,sy,this.frameWidth,this.frameHeight,0,0,this.frameWidth,this.frameHeight);
@@ -172,7 +173,7 @@ window.Smila = function () {
     /**
      *  Tests, if a pixel got hit by absolute x y
      */
-    Sprite.isPixel = function (x, y) {
+    Sprite.prototype.isPixel = function (x, y) {
         var normalizedX = x - this.x + (this.ox * this.frameWidth);
         var normalizedY = y - this.y + (this.oy * this.frameHeight);
         return this.bitmask.test(normalizedX, normalizedY);
@@ -382,6 +383,20 @@ window.Smila = function () {
 
     var renderLoopIndex = 0;
 
+    // Renderer update variables (to not create new objects all the time!)
+    var cameraRealX = 0;
+    var elapsed = 0;
+    var now = 0;
+    var dt = 0;
+    var cameraRealY = 0;
+    var clearRect_h = 0;
+    var clearRect_w = 0;
+    var clearX = 0;
+    var clearY = 0;
+    var rightOuterBound = 0;
+    var bottomBound = 0;
+    // -------------------------
+
     var Renderer = Smila.Renderer = {
 
         /**
@@ -481,20 +496,20 @@ window.Smila = function () {
         },
 
         update:function () {
-            var now = new Date().getTime(),
-                elapsed = now - (Renderer.time || now);
+            now = new Date().getTime();
+            elapsed = now - (Renderer.time || now);
             Renderer.time = now;
-            var dt = elapsed / EXPECTED_ELAPSED_MILLIS;
-            var cameraRealX = camera.realPosition.x;
-            var cameraRealY = camera.realPosition.y;
-            var w = dimension.w + 20;
-            var h = dimension.h + 20;
-            var clearX = cameraRealX - 10;
-            var clearY = cameraRealY - 10;
-            var rightOuterBound = cameraRealX + dimension.w;
-            var bottomBound = cameraRealY + dimension.h;
+            dt = elapsed / EXPECTED_ELAPSED_MILLIS;
+            cameraRealX = camera.realPosition.x;
+            cameraRealY = camera.realPosition.y;
+            clearRect_w = dimension.w + 20;
+            clearRect_h = dimension.h + 20;
+            clearX = cameraRealX - 10;
+            clearY = cameraRealY - 10;
+            rightOuterBound = cameraRealX + dimension.w;
+            bottomBound = cameraRealY + dimension.h;
 
-            context.clearRect(clearX, clearY, w, h);
+            context.clearRect(clearX, clearY, clearRect_w, clearRect_h);
 
             camera.render();
 
@@ -624,12 +639,13 @@ window.Smila = function () {
                     var outlined = document.createElement('canvas');
                     outlined.width = img.width;
                     outlined.height = img.height;
-                    context = outlined.getContext('2d');
-                    context.drawImage(canvas, 0, 0);
-                    var data = context.getImageData(0, 0, img.width, img.height);
+                    var outlinedContext = outlined.getContext('2d');
+                    outlinedContext.drawImage(canvas, 0, 0);
+                    var data = outlinedContext.getImageData(0, 0, img.width, img.height);
                     var color = spriteData.ocol | defaultOutlineColor;
                     data = outlineFunction(img.width, img.height, data, color);
                     data = outlineFunction(img.width, img.height, data, color);// todo: fix this... (needed for 2px outline
+                    outlinedContext.putImageData(data,0,0);
                     spriteCache[key] = {meta:spriteData, canvas:outlined};
                 }
             }

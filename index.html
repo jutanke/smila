@@ -4,7 +4,6 @@
     <title>Smila</title>
 </head>
 <script src="libs/stats.js"></script>
-<script src="libs/quojs.js"></script>
 <script src="libs/keys.js"></script>
 <script src="js/smila.js"></script>
 <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
@@ -91,23 +90,35 @@
         Smila.DataStore.put({src:"res/img/character.png", w:64, h:64, key:"character", o:true, bm:true}, function () {
 
             var sprite = Smila.DataStore.get("character");
+            sprite.onmouseenter(function(){
+                this.outline(true);
+            });
+            sprite.onmouseleave(function(){
+                this.outline(false);
+            });
 
-            for(var i = 0; i < 10000;i++){
+
+            /*
+            for(var i = 0; i < 0;i++){
                 var spr = Smila.DataStore.get("character");
+                spr.onmouseenter(function(){
+                    this.outline(true);
+                });
                 Smila.Renderer.add(spr);
                 var x = getRandomInt(0,8000);
                 var y = getRandomInt(0,8000);
                 spr.position(x,y);
             }
+            */
 
             Smila.Renderer.add(sprite);
 
 
 
 
-            var sprite2 = Smila.DataStore.get("character");
+            var sprite2 = Smila.DataStore.get("character_outline");
             Smila.Renderer.add(sprite2);
-            sprite2.position(10,-5);
+            sprite2.position(30,30);
 
             Smila.Renderer.onUpdate(function(dt, elapsed){
 
