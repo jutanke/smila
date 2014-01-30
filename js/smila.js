@@ -283,10 +283,15 @@ window.Smila = function () {
         this.pointer = 0;
         this.currentState = "";
         this.allanimations = animations;
+        this.updateCallback = null;
         this.subupdate = function(){};
     };
 
     Entity.prototype = Object.create(Sprite.prototype);
+
+    Entity.prototype.onUpdate = function(callback){
+        this.updateCallback = callback;
+    };
 
     Entity.prototype.animate = function(key){
         if(key === this.currentState) return;
@@ -312,6 +317,7 @@ window.Smila = function () {
 
     Entity.prototype.update = function(dt, elapsedMillis){
         // TODO remove duplicated code with Animation
+        if (this.updateCallback !== null) this.updateCallback.call(this,dt,elapsedMillis);
         if(this.animations.length === 0) return;
         if(this.animations.length === 1){
             this.subimage(this.animations[0].x, this.animations[0].y);
@@ -681,6 +687,8 @@ window.Smila = function () {
             bottomBound = cameraRealY + dimension.h;
 
             context.clearRect(clearX, clearY, clearRect_w, clearRect_h);
+
+            // -- sprite-sort!
 
 
             camera.render();

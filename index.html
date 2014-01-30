@@ -66,6 +66,10 @@
                         "down" : {anims:[{x:2,y:2},{x:2,y:1},{x:2,y:3}],durationPerFrame:300,type:Smila.Animation.Type.BOUNCE}
                     });
 
+            entity.onUpdate(function(dt,elapsed){
+
+            });
+
             var entity2 = Smila.DataStore.getEntity("character",
                     {
                         "up" : {anims:[{x:0,y:0},{x:1,y:1},{x:2,y:0}],durationPerFrame:1000,type:Smila.Animation.Type.BOUNCE}
