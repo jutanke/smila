@@ -52,35 +52,6 @@
 
     window.onload = function () {
 
-
-        //$('#smila').width($(window).width()).height($(window).height());
-
-
-        /*
-        document.onkeydown = function(e){
-            switch (e.keyCode){
-                case 65:    // a
-                    Smila.Renderer.camera().translate(-1,0);
-                    break;
-                case 68:    // d
-                    Smila.Renderer.camera().translate(1,0);
-                    break;
-                case 87:    // w
-                    Smila.Renderer.camera().translate(0,-1);
-                    break;
-                case 83:    // s
-                    Smila.Renderer.camera().translate(0,1);
-                    break;
-                default :
-                    Smila.Renderer.camera().translate(0,0);
-            }
-        }
-
-        document.onkeyup = function(e){
-            Smila.Renderer.camera().translate(0,0);
-        }
-        */
-
         Smila.Settings({
             verbose:true
         });
@@ -153,7 +124,7 @@
 </script>
 <body>
 <div id="bg">
-    <div style="width:800px; height:800px;" id="smila"></div>
+    <div style="width:800px; height:600px;" id="smila"></div>
 </div>
 </body>
 </html>
