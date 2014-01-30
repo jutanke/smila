@@ -60,35 +60,22 @@
 
         Smila.DataStore.put({src:"res/img/character.png", w:64, h:64, key:"character", o:true, bm:true}, function () {
 
-            var sprite = Smila.DataStore.get("character");
-            sprite.onmouseenter(function(){
+            var anim = Smila.DataStore.getAnimation("character",[{x:0,y:2},{x:0,y:1},{x:1,y:0}], 200, Smila.Animation.Type.BOUNCE);
+            anim.play();
+            anim.onmouseenter(function(){
                 this.outline(true);
             });
-            sprite.onmouseleave(function(){
+            anim.onmouseleave(function(){
                 this.outline(false);
             });
 
-
-            /*
-            for(var i = 0; i < 0;i++){
-                var spr = Smila.DataStore.get("character");
-                spr.onmouseenter(function(){
-                    this.outline(true);
-                });
-                Smila.Renderer.add(spr);
-                var x = getRandomInt(0,8000);
-                var y = getRandomInt(0,8000);
-                spr.position(x,y);
-            }
-            */
-
-            Smila.Renderer.add(sprite);
+            Smila.Renderer.add(anim);
 
 
 
 
             var sprite2 = Smila.DataStore.get("character_outline");
-            Smila.Renderer.add(sprite2);
+            //Smila.Renderer.add(sprite2);
             sprite2.position(30,30);
 
             Smila.Renderer.onUpdate(function(dt, elapsed){

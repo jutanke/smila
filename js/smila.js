@@ -186,11 +186,11 @@ window.Smila = function () {
      * @param type {Animation.Type}
      * @type {Function}
      */
-    var Animation = Smila.Animation = function (sprite, animations, durationPerStep, type) {
-        this.sprite = sprite;
+    var Animation = Smila.Animation = function (canvas, spriteData, animations, durationPerStep, type) {
+        Sprite.call(this, canvas, spriteData);
         this.animations = animations;
         this.durationPerStepInMs = durationPerStep;
-        var atype = type || Animation.Type.ONCE;
+        var atype = typeof type === 'undefined' ? Animation.Type.ONCE : type;
         this.pointer = 0;
         this.isStoped = true;
         this.elapsedTime = 0;
@@ -199,19 +199,43 @@ window.Smila = function () {
             case Animation.Type.BOUNCE:
                 this.subupdate = BOUNCE_UPDATE;
                 break;
+            case Animation.Type.ENDLESS:
+                this.subupdate = ENDLESS_UPDATE;
+                break;
+            case Animation.Type.ONCE:
+                this.subupdate = ONCE_UPDATE;
+                break;
         }
+    };
+
+    Animation.prototype = Object.create(Sprite.prototype);
+
+    Animation.prototype.play = function(){
+        this.isStoped = false;
+        return this;
+    };
+
+    Animation.prototype.pause = function(){
+        this.isStoped = true;
+        return this;
+    };
+
+    Animation.prototype.reset = function(){
+        this.isStoped = true;
+        this.pointer = 0;
+        return this;
     };
 
     Animation.prototype.update = function (dt, elapsedMillis) {
         if (!this.isStoped) {
             if (this.animations.length === 1) {
-                this.sprite.subimage(this.animations[0].x, this.animations[0].y);
+                this.subimage(this.animations[0].x, this.animations[0].y);
             } else {
                 if (this.elapsedTime > this.durationPerStepInMs) {
                     this.elapsedTime = 0;
                     this.subupdate();
                     var current = this.animations[this.pointer];
-                    this.sprite.subimage(current.x, current.y);
+                    this.subimage(current.x, current.y);
                 }
                 this.elapsedTime += elapsedMillis;
             }
@@ -219,7 +243,12 @@ window.Smila = function () {
     };
 
     var ONCE_UPDATE = function(){
-        if(this.pointer < this.animations.length) this.pointer += 1;
+        if(this.pointer < this.animations.length-1) this.pointer += 1;
+    };
+
+    var ENDLESS_UPDATE = function(){
+        if(this.pointer < (this.animations.length - 1)) this.pointer += 1;
+        else this.pointer = 0;
     };
 
     var BOUNCE_UPDATE = function () {
@@ -342,6 +371,21 @@ window.Smila = function () {
                 return new Sprite(data.canvas, data.meta);
             }
             throw "[Smila::DataStore->get] cannot find {" + key + "}";
+        },
+
+        /**
+         *
+         * @param key {String}
+         * @param animations {Array} : [{x:0,y:1},{x:2,y:0},..]
+         * @param durationPerFrameInMs {Integer}
+         * @param type {Animation.Type}
+         */
+        getAnimation: function(key,animations,durationPerFrameInMs, type){
+            if (key in spriteCache) {
+                var data = spriteCache[key];
+                return new Animation(data.canvas, data.meta,animations,durationPerFrameInMs,type);
+            }
+            throw "[Smila::DataStore->getAnimation] cannot find {" + key + "}";
         }
 
     };
@@ -569,6 +613,9 @@ window.Smila = function () {
 
             for (var i = 0; i < renderItems.length; i += 1) {
                 var drawable = renderItems[i];
+                if(drawable.update){
+                    drawable.update(dt,elapsed);
+                }
                 if ((drawable.x + drawable.frameWidth | drawable.width) >= cameraRealX && drawable.x <= rightOuterBound) {
                     if ((drawable.y + drawable.frameHeight | drawable.height) >= cameraRealY && drawable.y <= bottomBound) {
                         drawable.render(context);
