@@ -265,6 +265,65 @@ window.Smila = function () {
     };
 
     /**
+     * A more complex Animation-Sprite. Allows to use more than one animation-type
+     * @param canvas {Canvas} used for SpriteData
+     * @param spriteData {spriteData} used for SpriteData
+     * @param animations {Object}
+     * {
+     *     "up" : {anims:[], durationPerFrame:66, type:Animation.BOUNCE  },
+     *     "down" : {anims:[], durationPerFrame:66, type:Animation.BOUNCE  }
+     * }
+     * @type {Function}
+     */
+    var Entity = Smila.Entity = function(canvas,spriteData,animations){
+        Sprite.call(this,canvas, spriteData);
+        this.animations = [];
+        this.durationPerStepInMs = 0;
+        this.elapsedTime = 0;
+        this.pointer = 0;
+        this.allanimations = animations;
+        this.subupdate = function(){};
+    };
+
+    Entity.prototype = Object.create(Sprite.prototype);
+
+    Entity.prototype.animate = function(key){
+        var anim = this.allanimations[key];
+        if(anim){
+            this.pointer = 0;
+            this.animations = anim.anims;
+            this.durationPerStepInMs = anim.durationPerFrame;
+            switch(anim.type){
+                case Animation.Type.BOUNCE:
+                    this.subupdate = BOUNCE_UPDATE;
+                    break;
+                case Animation.Type.ENDLESS:
+                    this.subupdate = ENDLESS_UPDATE;
+                    break;
+                case Animation.Type.ONCE:
+                    this.subupdate = ONCE_UPDATE;
+                    break;
+            }
+        }
+    };
+
+    Entity.prototype.update = function(dt, elapsedMillis){
+        // TODO remove duplicated code with Animation
+        if(this.animations.length === 0) return;
+        if(this.animations.length === 1){
+            this.subimage(this.animations[0].x, this.animations[0].y);
+        }else{
+            if (this.elapsedTime > this.durationPerStepInMs) {
+                this.elapsedTime = 0;
+                this.subupdate();
+                var current = this.animations[this.pointer];
+                this.subimage(current.x, current.y);
+            }
+            this.elapsedTime += elapsedMillis;
+        }
+    };
+
+    /**
      *
      * @type {Function}
      */
@@ -384,6 +443,23 @@ window.Smila = function () {
             if (key in spriteCache) {
                 var data = spriteCache[key];
                 return new Animation(data.canvas, data.meta,animations,durationPerFrameInMs,type);
+            }
+            throw "[Smila::DataStore->getAnimation] cannot find {" + key + "}";
+        },
+
+        /**
+         *
+         * @param key {String}
+         * @param animations {Object}
+         * {
+         *    "up" : {anims:[], durationPerFrame:66, type:Animation.BOUNCE  },
+         *    "down" : {anims:[], durationPerFrame:66, type:Animation.BOUNCE  }
+         * }
+         */
+        getEntity: function(key, animations){
+            if (key in spriteCache) {
+                var data = spriteCache[key];
+                return new Entity(data.canvas, data.meta,animations);
             }
             throw "[Smila::DataStore->getAnimation] cannot find {" + key + "}";
         }

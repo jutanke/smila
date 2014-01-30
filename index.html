@@ -60,16 +60,31 @@
 
         Smila.DataStore.put({src:"res/img/character.png", w:64, h:64, key:"character", o:true, bm:true}, function () {
 
-            var anim = Smila.DataStore.getAnimation("character",[{x:0,y:2},{x:0,y:1},{x:1,y:0}], 200, Smila.Animation.Type.BOUNCE);
-            anim.play();
-            anim.onmouseenter(function(){
+            //var anim = Smila.DataStore.getAnimation("character",[{x:0,y:2},{x:0,y:1},{x:1,y:0}], 200, Smila.Animation.Type.BOUNCE);
+            //anim.play();
+
+            var entity = Smila.DataStore.getEntity("character",
+                    {
+                        "up" : {anims:[{x:0,y:0},{x:1,y:1},{x:2,y:0}],durationPerFrame:1000,type:Smila.Animation.Type.ENDLESS}
+                    });
+
+            var entity2 = Smila.DataStore.getEntity("character",
+                    {
+                        "up" : {anims:[{x:0,y:0},{x:1,y:1},{x:2,y:0}],durationPerFrame:1000,type:Smila.Animation.Type.BOUNCE}
+                    });
+
+            entity.animate("up");
+            entity2.position(40,0).animate("up");
+
+            entity.onmouseenter(function(){
                 this.outline(true);
             });
-            anim.onmouseleave(function(){
+            entity.onmouseleave(function(){
                 this.outline(false);
             });
 
-            Smila.Renderer.add(anim);
+            Smila.Renderer.add(entity);
+            Smila.Renderer.add(entity2);
 
 
 
