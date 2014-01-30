@@ -281,6 +281,7 @@ window.Smila = function () {
         this.durationPerStepInMs = 0;
         this.elapsedTime = 0;
         this.pointer = 0;
+        this.currentState = "";
         this.allanimations = animations;
         this.subupdate = function(){};
     };
@@ -288,8 +289,10 @@ window.Smila = function () {
     Entity.prototype = Object.create(Sprite.prototype);
 
     Entity.prototype.animate = function(key){
+        if(key === this.currentState) return;
         var anim = this.allanimations[key];
         if(anim){
+            this.currentState = key;
             this.pointer = 0;
             this.animations = anim.anims;
             this.durationPerStepInMs = anim.durationPerFrame;

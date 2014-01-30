@@ -60,12 +60,10 @@
 
         Smila.DataStore.put({src:"res/img/character.png", w:64, h:64, key:"character", o:true, bm:true}, function () {
 
-            //var anim = Smila.DataStore.getAnimation("character",[{x:0,y:2},{x:0,y:1},{x:1,y:0}], 200, Smila.Animation.Type.BOUNCE);
-            //anim.play();
-
             var entity = Smila.DataStore.getEntity("character",
                     {
-                        "up" : {anims:[{x:0,y:0},{x:1,y:1},{x:2,y:0}],durationPerFrame:1000,type:Smila.Animation.Type.ENDLESS}
+                        "up" : {anims:[{x:2,y:0},{x:0,y:0},{x:1,y:3}],durationPerFrame:300,type:Smila.Animation.Type.BOUNCE},
+                        "down" : {anims:[{x:2,y:2},{x:2,y:1},{x:2,y:3}],durationPerFrame:300,type:Smila.Animation.Type.BOUNCE}
                     });
 
             var entity2 = Smila.DataStore.getEntity("character",
@@ -94,6 +92,10 @@
             sprite2.position(30,30);
 
             Smila.Renderer.onUpdate(function(dt, elapsed){
+
+                if(isKeyPressed(KEY.SPACEBAR)){
+                    entity.animate("down");
+                }
 
                 var offsetY = 0;
                 var offsetX = 0;
