@@ -715,6 +715,38 @@ window.Smila = function () {
         }
     };
 
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // P A R T I C L E  S Y S T E M
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    var PARTICLE_BYTE_SIZE = 12|0;
+    var DEFAULT_PARTICLE_COUNT = 10000|0;
+
+    var ParticleSystem = Smila.ParticleSystem = function(e){
+        var particleCount = e.particleCount || DEFAULT_PARTICLE_COUNT;
+
+        var data = new ArrayBuffer(particleCount * PARTICLE_BYTE_SIZE);
+        this.view = new Int16Array(data);
+
+        this.pointer = 0;
+    };
+
+    ParticleSystem.prototype.createParticle = function(point, velocity,acc){
+        this.view[this.pointer] = point.x;
+        this.view[this.pointer+1] = point.y;
+        this.view[this.pointer+2] = velocity.x;
+        this.view[this.pointer+3] = velocity.y;
+        this.view[this.pointer+4] = acc.x;
+        this.view[this.pointer+5] = acc.yx;
+    };
+
+
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // P A R T I C L E  S Y S T E M  E N D
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // P R I V A T E   H E L P E R   F U N C T I O N S
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
