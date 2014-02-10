@@ -6,7 +6,7 @@ window.Smila = function () {
     // SETTINGS
     var useWebGL = false;
     var imagePath = "";
-    var defaultOutlineColor = {r: 255, g: 0, b: 0, a: 255};
+    var defaultOutlineColor = {r:255, g:0, b:0, a:255};
     var verbose;
 
     var EXPECTED_ELAPSED_MILLIS = Math.floor(1000 / 60);
@@ -22,7 +22,7 @@ window.Smila = function () {
     Smila.Settings = function (options) {
         useWebGL = options.useWebGL || false;
         imagePath = options.imagePath || "";
-        defaultOutlineColor = options.defaultOutlineColor || {r: 255, g: 0, b: 0, a: 255};
+        defaultOutlineColor = options.defaultOutlineColor || {r:255, g:0, b:0, a:255};
         verbose = options.verbose || false;
     };
 
@@ -99,7 +99,7 @@ window.Smila = function () {
             this.y = y;
             return this;
         }
-        return {x: this.x, y: this.y};
+        return {x:this.x, y:this.y};
     };
 
     Sprite.prototype.toCanvas = function () {
@@ -210,17 +210,17 @@ window.Smila = function () {
 
     Animation.prototype = Object.create(Sprite.prototype);
 
-    Animation.prototype.play = function(){
+    Animation.prototype.play = function () {
         this.isStoped = false;
         return this;
     };
 
-    Animation.prototype.pause = function(){
+    Animation.prototype.pause = function () {
         this.isStoped = true;
         return this;
     };
 
-    Animation.prototype.reset = function(){
+    Animation.prototype.reset = function () {
         this.isStoped = true;
         this.pointer = 0;
         return this;
@@ -242,12 +242,12 @@ window.Smila = function () {
         }
     };
 
-    var ONCE_UPDATE = function(){
-        if(this.pointer < this.animations.length-1) this.pointer += 1;
+    var ONCE_UPDATE = function () {
+        if (this.pointer < this.animations.length - 1) this.pointer += 1;
     };
 
-    var ENDLESS_UPDATE = function(){
-        if(this.pointer < (this.animations.length - 1)) this.pointer += 1;
+    var ENDLESS_UPDATE = function () {
+        if (this.pointer < (this.animations.length - 1)) this.pointer += 1;
         else this.pointer = 0;
     };
 
@@ -259,9 +259,9 @@ window.Smila = function () {
     };
 
     Animation.Type = {
-        BOUNCE: 0,
-        ONCE: 1,
-        ENDLESS: 2
+        BOUNCE:0,
+        ONCE:1,
+        ENDLESS:2
     };
 
     /**
@@ -275,8 +275,8 @@ window.Smila = function () {
      * }
      * @type {Function}
      */
-    var Entity = Smila.Entity = function(canvas,spriteData,animations){
-        Sprite.call(this,canvas, spriteData);
+    var Entity = Smila.Entity = function (canvas, spriteData, animations) {
+        Sprite.call(this, canvas, spriteData);
         this.animations = [];
         this.durationPerStepInMs = 0;
         this.elapsedTime = 0;
@@ -284,24 +284,25 @@ window.Smila = function () {
         this.currentState = "";
         this.allanimations = animations;
         this.updateCallback = null;
-        this.subupdate = function(){};
+        this.subupdate = function () {
+        };
     };
 
     Entity.prototype = Object.create(Sprite.prototype);
 
-    Entity.prototype.onUpdate = function(callback){
+    Entity.prototype.onUpdate = function (callback) {
         this.updateCallback = callback;
     };
 
-    Entity.prototype.animate = function(key){
-        if(key === this.currentState) return;
+    Entity.prototype.animate = function (key) {
+        if (key === this.currentState) return;
         var anim = this.allanimations[key];
-        if(anim){
+        if (anim) {
             this.currentState = key;
             this.pointer = 0;
             this.animations = anim.anims;
             this.durationPerStepInMs = anim.durationPerFrame;
-            switch(anim.type){
+            switch (anim.type) {
                 case Animation.Type.BOUNCE:
                     this.subupdate = BOUNCE_UPDATE;
                     break;
@@ -315,13 +316,13 @@ window.Smila = function () {
         }
     };
 
-    Entity.prototype.update = function(dt, elapsedMillis){
+    Entity.prototype.update = function (dt, elapsedMillis) {
         // TODO remove duplicated code with Animation
-        if (this.updateCallback !== null) this.updateCallback.call(this,dt,elapsedMillis);
-        if(this.animations.length === 0) return;
-        if(this.animations.length === 1){
+        if (this.updateCallback !== null) this.updateCallback.call(this, dt, elapsedMillis);
+        if (this.animations.length === 0) return;
+        if (this.animations.length === 1) {
             this.subimage(this.animations[0].x, this.animations[0].y);
-        }else{
+        } else {
             if (this.elapsedTime > this.durationPerStepInMs) {
                 this.elapsedTime = 0;
                 this.subupdate();
@@ -345,8 +346,8 @@ window.Smila = function () {
      * @type {Function}
      */
     var Camera = Smila.Camera = function () {
-        this.offset = {x: 0, y: 0};
-        this.realPosition = {x: 0, y: 0};
+        this.offset = {x:0, y:0};
+        this.realPosition = {x:0, y:0};
     };
 
     Camera.prototype.translate = function (offsetX, offsetY) {
@@ -403,7 +404,7 @@ window.Smila = function () {
          * @param callback {function} gets called, when all spriteData is loaded
          * @return {Smila.DataStore}
          */
-        put: function (spriteData, callback) {
+        put:function (spriteData, callback) {
             if (spriteData instanceof Array) {
                 var acc = [];
                 spriteData.forEach(function (element) {
@@ -433,7 +434,7 @@ window.Smila = function () {
          * @param key {String}
          * @return {Smila.Sprite}
          */
-        get: function (key) {
+        get:function (key) {
             if (key in spriteCache) {
                 var data = spriteCache[key];
                 return new Sprite(data.canvas, data.meta);
@@ -448,10 +449,10 @@ window.Smila = function () {
          * @param durationPerFrameInMs {Integer}
          * @param type {Animation.Type}
          */
-        getAnimation: function(key,animations,durationPerFrameInMs, type){
+        getAnimation:function (key, animations, durationPerFrameInMs, type) {
             if (key in spriteCache) {
                 var data = spriteCache[key];
-                return new Animation(data.canvas, data.meta,animations,durationPerFrameInMs,type);
+                return new Animation(data.canvas, data.meta, animations, durationPerFrameInMs, type);
             }
             throw "[Smila::DataStore->getAnimation] cannot find {" + key + "}";
         },
@@ -465,10 +466,10 @@ window.Smila = function () {
          *    "down" : {anims:[], durationPerFrame:66, type:Animation.BOUNCE  }
          * }
          */
-        getEntity: function(key, animations){
+        getEntity:function (key, animations) {
             if (key in spriteCache) {
                 var data = spriteCache[key];
-                return new Entity(data.canvas, data.meta,animations);
+                return new Entity(data.canvas, data.meta, animations);
             }
             throw "[Smila::DataStore->getAnimation] cannot find {" + key + "}";
         }
@@ -484,7 +485,7 @@ window.Smila = function () {
     var rendererIsRunning = false;
 
     var stats = null;
-    var dimension = {w: -1, h: -1};
+    var dimension = {w:-1, h:-1};
 
     /**
      * The global Canvas, on that all content is renderered
@@ -500,7 +501,7 @@ window.Smila = function () {
      */
     var thread = -1;
 
-    var mousePosition = {x: -1, y: -1};
+    var mousePosition = {x:-1, y:-1};
 
     /**
      * @type {Boolean} It is not allowed to start the renderer twice
@@ -580,12 +581,12 @@ window.Smila = function () {
          * gets called every time the renderer updates
          * @param callback {function} with function(dt, elapsed) { ... }
          */
-        onUpdate: function (callback) {
+        onUpdate:function (callback) {
             callback.$smilaId = onUpdateCallbackPointer++;
             updateCallbacks[callback.$smilaId] = callback;
         },
 
-        offUpdate: function (callback) {
+        offUpdate:function (callback) {
             if ('$smilaId' in callback) {
                 delete updateCallbacks[callback.$smilaId];
             } else {
@@ -599,18 +600,18 @@ window.Smila = function () {
          * onto the screen. The return-value of the callback will be the sorted list
          * @param callback {function} [Sprite]->[Sprite]  //sorted
          */
-        onSortSprites: function (callback) {
+        onSortSprites:function (callback) {
             sortFunction = callback;
         },
 
-        reset: function () {
+        reset:function () {
             updateCallbacks = {};
             renderItems = [];
             map = null;
             sortFunction = SORT_BY_Y_VALUE
         },
 
-        isRunning: function () {
+        isRunning:function () {
             return rendererIsRunning;
         },
 
@@ -620,11 +621,11 @@ window.Smila = function () {
          * sensitive
          * @param sprite
          */
-        add: function (sprite) {
+        add:function (sprite) {
             renderItems.push(sprite);
         },
 
-        start: function () {
+        start:function () {
             log("[Smila::Renderer->start]");
             if (isStarted) {
                 throw "[Smila::Renderer->start] The Renderer is already started!";
@@ -668,11 +669,11 @@ window.Smila = function () {
             }
         },
 
-        camera: function () {
+        camera:function () {
             return camera;
         },
 
-        update: function () {
+        update:function () {
             now = new Date().getTime();
             elapsed = now - (Renderer.time || now);
             Renderer.time = now;
@@ -700,8 +701,8 @@ window.Smila = function () {
 
             for (var i = 0; i < renderItems.length; i += 1) {
                 var drawable = renderItems[i];
-                if(drawable.update){
-                    drawable.update(dt,elapsed);
+                if (drawable.update) {
+                    drawable.update(dt, elapsed);
                 }
                 if ((drawable.x + drawable.frameWidth | drawable.width) >= cameraRealX && drawable.x <= rightOuterBound) {
                     if ((drawable.y + drawable.frameHeight | drawable.height) >= cameraRealY && drawable.y <= bottomBound) {
@@ -720,27 +721,94 @@ window.Smila = function () {
     // P A R T I C L E  S Y S T E M
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    var PARTICLE_BYTE_SIZE = 12|0;
-    var DEFAULT_PARTICLE_COUNT = 10000|0;
+    var PARTICLE_BYTE_SIZE = 12 | 0;
+    var DEFAULT_PARTICLE_COUNT = 10000 | 0;
 
-    var ParticleSystem = Smila.ParticleSystem = function(e){
+    var ParticleSystem = Smila.ParticleSystem = function (e) {
         var particleCount = e.particleCount || DEFAULT_PARTICLE_COUNT;
 
         var data = new ArrayBuffer(particleCount * PARTICLE_BYTE_SIZE);
         this.view = new Int16Array(data);
-
         this.pointer = 0;
+
+        this.emitter = null;
     };
 
-    ParticleSystem.prototype.createParticle = function(point, velocity,acc){
+    ParticleSystem.prototype.createParticle = function (point, velocity, acc) {
+        if (this.pointer >= this.view.length) {
+            this.pointer = 0; // circle...
+        }
         this.view[this.pointer] = point.x;
-        this.view[this.pointer+1] = point.y;
-        this.view[this.pointer+2] = velocity.x;
-        this.view[this.pointer+3] = velocity.y;
-        this.view[this.pointer+4] = acc.x;
-        this.view[this.pointer+5] = acc.yx;
+        this.view[this.pointer + 1] = point.y;
+        this.view[this.pointer + 2] = velocity.x;
+        this.view[this.pointer + 3] = velocity.y;
+        this.view[this.pointer + 4] = (typeof acc !== 'undefined')? acc.x : 0;
+        this.view[this.pointer + 5] = (typeof acc !== 'undefined')? acc.y : 0;
+        var result = this.pointer;
+        this.pointer += 6;
+        return result;
     };
 
+    ParticleSystem.prototype.setEmitter = function (point, velocity, spread, emissionRate, color) {
+        this.emitter = {
+            point:point,
+            velocity:velocity,
+            spread:spread,
+            emissionRate : emissionRate,
+            color:color || "#999"
+        };
+    };
+
+
+    ParticleSystem.prototype.update = function (dt, elapsedMillis) {
+
+        if(this.emitter !== null){
+            var emitter = this.emitter;
+            for(var i = 0; i < emitter.emissionRate; i++){
+
+
+                this.createParticle(emitter.point, emitter.velocity);
+            }
+
+        }
+
+    };
+
+    /**
+     * Adds the vector b on the vector a
+     * @param view {Int16Array}
+     * @param a {Integer} Position of the first Vectors x-position
+     * @param b {Integer} Position of the second Vector x-position
+     */
+    function addVectors(view, a, b) {
+        view[a] = view[a] + view[b];
+        view[a + 1] = view[a + 1] + view[b + 1];
+    };
+
+    /**
+     *
+     * @param view {Int16View}
+     * @param vector {Integer}
+     */
+    function getVectorMagnitude(view, vector) {
+        var x = view[vector];
+        var y = view[vector + 1]
+        return Math.sqrt(x * x + y * y);
+    };
+
+    /**
+     *
+     * @param view {Int16View}
+     * @param vector {Integer}
+     * @return {Number}
+     */
+    function getVectorAngle(view, vector) {
+        return Math.atan2(view[vector + 1], view[vector]);
+    };
+
+    function VectorfromAngle(view, angle, magnitude, destination) {
+        view[destination] = magnitude * Math.cos
+    };
 
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -846,7 +914,7 @@ window.Smila = function () {
             var context = canvas.getContext('2d');
             context.drawImage(img, 0, 0);
 
-            spriteCache[spriteData.key] = {meta: spriteData, canvas: canvas};
+            spriteCache[spriteData.key] = {meta:spriteData, canvas:canvas};
             // ~~~ outline? ~~~
             if (spriteData.o) {
                 var key = spriteData.key + "_outline";
@@ -861,7 +929,7 @@ window.Smila = function () {
                     data = outlineFunction(img.width, img.height, data, color);
                     data = outlineFunction(img.width, img.height, data, color);// todo: fix this... (needed for 2px outline
                     outlinedContext.putImageData(data, 0, 0);
-                    spriteCache[key] = {meta: spriteData, canvas: outlined};
+                    spriteCache[key] = {meta:spriteData, canvas:outlined};
                 }
             }
 
@@ -917,7 +985,7 @@ window.Smila = function () {
         var g = imageData.data[index + 1];
         var b = imageData.data[index + 2];
         var a = imageData.data[index + 3];
-        return {r: r, g: g, b: b, a: a};
+        return {r:r, g:g, b:b, a:a};
     };
 
     /**
@@ -987,8 +1055,8 @@ window.Smila = function () {
     var getAbsoluteMousePosition = function () {
         if (camera !== null) {
             return {
-                x: (camera.realPosition.x + mousePosition.x),
-                y: (camera.realPosition.y + mousePosition.y)
+                x:(camera.realPosition.x + mousePosition.x),
+                y:(camera.realPosition.y + mousePosition.y)
             };
         } else {
             return mousePosition;
