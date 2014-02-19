@@ -699,6 +699,9 @@ window.Smila = function () {
                 callback.call(callback, elapsed, dt);
             }
 
+            // Idee für die RenderItems:
+            // Sortiere die Items nach einem neuen Wert z=x+y
+            // Damit kann eine Sprite-Sortierung + Regionalisierung aufgebaut werden!
             for (var i = 0; i < renderItems.length; i += 1) {
                 var drawable = renderItems[i];
                 if (drawable.update) {
@@ -765,7 +768,8 @@ window.Smila = function () {
         if(this.emitter !== null){
             var emitter = this.emitter;
             for(var i = 0; i < emitter.emissionRate; i++){
-
+                
+                //var angle = {x:,y:0};
 
                 this.createParticle(emitter.point, emitter.velocity);
             }
@@ -805,6 +809,10 @@ window.Smila = function () {
     function getVectorAngle(view, vector) {
         return Math.atan2(view[vector + 1], view[vector]);
     };
+
+    function getVectorAngle2(){
+
+    }
 
     function VectorfromAngle(view, angle, magnitude, destination) {
         view[destination] = magnitude * Math.cos
