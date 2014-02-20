@@ -787,7 +787,8 @@ window.Smila = function () {
             lifetimeMs:lifetimeMs || 10000,
             color:color || "#999",
             elapsed : 0,
-            angle : Math.atan2(velocity.y, velocity.x)
+            angle : Math.atan2(velocity.y, velocity.x),
+            magnitude : Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y)
         };
     };
 
@@ -797,17 +798,16 @@ window.Smila = function () {
             var emitter = this.emitter;
             ctx.fillStyle = emitter.color;
             emitter.elapsed += elapsedMillis;
-            if (emitter.elapsed > 100){
+            if (emitter.elapsed > 500){
                 emitter.elapsed = 0;
                 for (var i = 0; i < emitter.emissionRate; i++) {
                     var velocity = {
                         x:emitter.velocity.x * Math.random() * emitter.spread,
                         y:emitter.velocity.y * Math.random() * emitter.spread
                     };
-
-                    console.log(emitter.angle);
-
-
+                    var angle = emitter.angle + emitter.spread - (Math.random() * emitter.spread * 2);
+                    var x = emitter.magnitude * Math.cos(angle);
+                    var y = emitter.magnitude * Math.sin(angle);
 
                     this.createParticle(emitter.point, velocity, emitter.lifetimeMs);
                 }
