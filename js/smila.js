@@ -717,10 +717,9 @@ window.Smila = function () {
             }
 
 
-
             // LAST
-            if (particleSystem !== null){
-                particleSystem.update(context, dt, elapsed, cameraRealX,cameraRealY,rightOuterBound,bottomBound );
+            if (particleSystem !== null) {
+                particleSystem.update(context, dt, elapsed, cameraRealX, cameraRealY, rightOuterBound, bottomBound);
             }
 
             thread = requestAnimationFrame(Renderer.update);
@@ -735,7 +734,7 @@ window.Smila = function () {
          * }
          * @returns {ParticleSystem}
          */
-        initParticleSystem: function(e){
+        initParticleSystem:function (e) {
             particleSystem = new ParticleSystem(e);
             return particleSystem;
         }
@@ -747,11 +746,11 @@ window.Smila = function () {
     // P A R T I C L E  S Y S T E M
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    var PARTICLE_BYTE_SIZE = 24 | 0;
-    var DEFAULT_PARTICLE_COUNT = 10000 | 0;
+    var PARTICLE_BYTE_SIZE = 28 | 0;
+    var DEFAULT_PARTICLE_COUNT = 100 | 0;
 
     var ParticleSystem = Smila.ParticleSystem = function (e) {
-        var particleCount = (typeof e === 'undefined')? DEFAULT_PARTICLE_COUNT : e.particleCount || DEFAULT_PARTICLE_COUNT;
+        var particleCount = (typeof e === 'undefined') ? DEFAULT_PARTICLE_COUNT : e.particleCount || DEFAULT_PARTICLE_COUNT;
 
 
         var data = new ArrayBuffer(particleCount * PARTICLE_BYTE_SIZE);
@@ -765,55 +764,65 @@ window.Smila = function () {
     ParticleSystem.prototype.createParticle = function (point, velocity, acc) {
         if (this.pointer >= this.view.length) {
             this.pointer = 0; // circle...
+            console.log("CIRCLE!");
         }
         this.view[this.pointer] = point.x;
         this.view[this.pointer + 1] = point.y;
         this.view[this.pointer + 2] = velocity.x;
         this.view[this.pointer + 3] = velocity.y;
-        this.view[this.pointer + 4] = (typeof acc !== 'undefined')? acc.x : 0;
-        this.view[this.pointer + 5] = (typeof acc !== 'undefined')? acc.y : 0;
+        this.view[this.pointer + 4] = (typeof acc !== 'undefined') ? acc.x : 0;
+        this.view[this.pointer + 5] = (typeof acc !== 'undefined') ? acc.y : 0;
+        this.view[this.pointer + 6] = 0;
         var result = this.pointer;
         this.particleCount += 1;
         this.pointer += 6;
         return result;
     };
 
-    ParticleSystem.prototype.setEmitter = function (point, velocity, spread, emissionRate, color) {
+    ParticleSystem.prototype.setEmitter = function (point, velocity, spread, emissionRate, lifetimeMs, color) {
         this.emitter = {
             point:point,
             velocity:velocity,
             spread:spread,
-            emissionRate : emissionRate || 4,
+            emissionRate:emissionRate || 4,
+            lifetimeMs:lifetimeMs || 10000,
             color:color || "#999"
         };
     };
 
 
-    ParticleSystem.prototype.update = function (ctx, dt, elapsedMillis, viewX, viewY,viewWidthX,viewHeightY) {
-        if(this.emitter !== null){
+    ParticleSystem.prototype.update = function (ctx, dt, elapsedMillis, viewX, viewY, viewWidthX, viewHeightY) {
+        if (this.emitter !== null) {
             var emitter = this.emitter;
             ctx.fillStyle = emitter.color;
-            for(var i = 0; i < emitter.emissionRate; i++){
-                var xSpread = Math.random() * emitter.spread;
-                var ySpread = Math.random() * emitter.spread;
-                this.createParticle(emitter.point, emitter.velocity, {x:xSpread,y:ySpread});
+            for (var i = 0; i < emitter.emissionRate; i++) {
+                var velocity = {
+                    x:emitter.velocity.x + Math.random() * emitter.spread,
+                    y:emitter.velocity.y + Math.random() * emitter.spread
+                };
+                this.createParticle(emitter.point, velocity);
             }
         }
 
         // render particles
         var pos = 0;
         var view = this.view;
-        ctx.save();
-        for(var i = 0; i < this.particleCount;i++){
-            pos = i * 6;
-            addVectors(view,pos, pos + 2); // add velocity to position
-            addVectors(view,pos + 2, pos + 4); // add acceleration to velocity
-            if (view[pos] >= viewX && view[pos] <= viewWidthX && view[pos+1] >= viewY && view[pos+1] <= viewHeightY){
-                ctx.fillRect(view[pos],view[pos+1],2,2);
+        for (var i = 0; i < this.particleCount; i++) {
+            pos = i * 7;
+            //console.log(view[pos+6]);
+            if (view[pos + 6] > 0) {
+                view[pos + 6] -= elapsedMillis;
+                addVectors(view, pos, pos + 2); // add velocity to position
+                if (i === 5) {
+                    console.log(view[pos] + "\t|" + view[pos + 1] + " \t|| " + view[pos + 2] + "\t|" + view[pos + 3]);
+                }
+                addVectors(view, pos + 2, pos + 4); // add acceleration to velocity
+                if (view[pos] >= viewX && view[pos] <= viewWidthX && view[pos + 1] >= viewY && view[pos + 1] <= viewHeightY) {
+                    ctx.fillRect(view[pos], view[pos + 1], 2, 2);
+                }
             }
-
         }
-        ctx.restore();
+        //ctx.restore();
 
     };
 
@@ -849,7 +858,7 @@ window.Smila = function () {
         return Math.atan2(view[vector + 1], view[vector]);
     };
 
-    function getVectorAngle2(){
+    function getVectorAngle2() {
 
     }
 

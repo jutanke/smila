@@ -89,13 +89,15 @@
             Smila.Renderer.add(entity2);
 
             var ps = Smila.Renderer.initParticleSystem({
-                particleCount : 1000
+                particleCount : 10000
             });
             ps.setEmitter(
-                    {x:40,y:40},
-                    {x:-2,y:-2},
-                    0.4,
-                    5
+                    {x:140,y:140},
+                    {x:1,y:0},
+                    6,
+                    15,
+                    15 * 1000,
+                    "red"
             );
 
 
