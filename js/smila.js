@@ -798,7 +798,7 @@ window.Smila = function () {
             var emitter = this.emitter;
             ctx.fillStyle = emitter.color;
             emitter.elapsed += elapsedMillis;
-            if (emitter.elapsed > 500){
+            if (emitter.elapsed > 100){
                 emitter.elapsed = 0;
                 for (var i = 0; i < emitter.emissionRate; i++) {
                     var velocity = {
@@ -809,7 +809,7 @@ window.Smila = function () {
                     var x = emitter.magnitude * Math.cos(angle);
                     var y = emitter.magnitude * Math.sin(angle);
 
-                    this.createParticle(emitter.point, velocity, emitter.lifetimeMs);
+                    this.createParticle(emitter.point, {x:x,y:y}, emitter.lifetimeMs);
                 }
             }
         }
