@@ -88,7 +88,15 @@
             Smila.Renderer.add(entity);
             Smila.Renderer.add(entity2);
 
-
+            var ps = Smila.Renderer.initParticleSystem({
+                particleCount : 1000
+            });
+            ps.setEmitter(
+                    {x:40,y:40},
+                    {x:-2,y:-2},
+                    0.4,
+                    5
+            );
 
 
             var sprite2 = Smila.DataStore.get("character_outline");
