@@ -561,7 +561,7 @@ window.Smila = function () {
 
     var renderLoopIndex = 0;
 
-    var particleSystem = null;
+    var particleEmitters = [];
 
     // Renderer update variables (to not create new objects all the time!)
     var cameraRealX = 0;
@@ -718,8 +718,8 @@ window.Smila = function () {
 
 
             // LAST
-            if (particleSystem !== null) {
-                particleSystem.update(context, dt, elapsed, cameraRealX, cameraRealY, rightOuterBound, bottomBound);
+            for (var i = 0; i < particleEmitters.length;i++) {
+                particleEmitters[i].update(context, dt, elapsed, cameraRealX, cameraRealY, rightOuterBound, bottomBound);
             }
 
             thread = requestAnimationFrame(Renderer.update);
@@ -729,18 +729,23 @@ window.Smila = function () {
         /**
          *
          * @param e {
-         *      particleCount : {Integer}
-         *
+         *      point : {x, y}
+         *      velocity : {x, y}
+         *      spread : double
+         *      emissionRate : Integer
+         *      lifetimeMs : Integer
+         *      color : String || [String]
+         *      totalLifetime : Integer { OPTIONAL }
          * }
-         * @returns {ParticleSystem}
+         * @return {Smila.ParticleEmitter}
          */
-        initParticleSystem:function (e) {
-            particleSystem = new ParticleSystem(e);
-            return particleSystem;
+        createParticleEmitter:function(e){
+            var emitter = new ParticleEmitter(e);
+            particleEmitters.push(emitter);
+            return emitter;
         }
 
     };
-
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // P A R T I C L E  S Y S T E M
@@ -749,19 +754,36 @@ window.Smila = function () {
     var PARTICLE_BYTE_SIZE = 28 | 0;
     var DEFAULT_PARTICLE_COUNT = 100 | 0;
 
-    var ParticleSystem = Smila.ParticleSystem = function (e) {
+    /**
+     *
+     * @type {Function}{
+     *
+     *
+     *
+     * }
+     */
+    var ParticleEmitter = Smila.ParticleEmitter = function (e) {
         var particleCount = (typeof e === 'undefined') ? DEFAULT_PARTICLE_COUNT : e.particleCount || DEFAULT_PARTICLE_COUNT;
 
-
+        this.point = e.point || e.p;
+        this.velocity = e.velocity || e.v;
+        this.spread = e.spread || e.s;
+        this.emissionRate = e.emissionRate || e.e;
+        this.lifetimeMs = e.lifetimeMs || e.ttl || 10000;
+        this.color = e.color || "#99CCFF";
+        this.totalLifetime = e.totalLifetime || e.tlt ||  null;
+        this.elapsed = 0;
+        this.colorPointer = 0;
+        this.angle = Math.atan2(this.velocity.y, this.velocity.x)
+        this.magnitude = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y);
         var data = new ArrayBuffer(particleCount * PARTICLE_BYTE_SIZE);
         this.view = new Float32Array(data);
         this.pointer = 0;
+        this.isActive = true;
         this.particleCount = 0;
-        this.emitter = null;
-        var self = this;
     };
 
-    ParticleSystem.prototype.createParticle = function (point, velocity,ttl, acc) {
+    ParticleEmitter.prototype.createParticle = function (point, velocity, ttl, acc) {
         if (this.pointer >= this.view.length) {
             this.pointer = 0; // circle...
         }
@@ -778,60 +800,72 @@ window.Smila = function () {
         return result;
     };
 
-    ParticleSystem.prototype.setEmitter = function (point, velocity, spread, emissionRate, lifetimeMs, color) {
+    // DELETE ME!
+    ParticleEmitter.prototype.setEmitter = function (point, velocity, spread, emissionRate, lifetimeMs, color) {
         this.emitter = {
             point:point,
             velocity:velocity,
             spread:spread,
             emissionRate:emissionRate || 4,
             lifetimeMs:lifetimeMs || 10000,
-            color:color || "#999",
-            elapsed : 0,
-            angle : Math.atan2(velocity.y, velocity.x),
-            magnitude : Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y)
+            color:color || "#99CCFF",
+            elapsed:0,
+            colorPointer:0,
+            angle:Math.atan2(velocity.y, velocity.x),
+            magnitude:Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y)
         };
     };
 
 
-    ParticleSystem.prototype.update = function (ctx, dt, elapsedMillis, viewX, viewY, viewWidthX, viewHeightY) {
-        if (this.emitter !== null) {
-            var emitter = this.emitter;
-            ctx.fillStyle = emitter.color;
-            emitter.elapsed += elapsedMillis;
-            if (emitter.elapsed > 100){
-                emitter.elapsed = 0;
-                for (var i = 0; i < emitter.emissionRate; i++) {
-                    var velocity = {
-                        x:emitter.velocity.x * Math.random() * emitter.spread,
-                        y:emitter.velocity.y * Math.random() * emitter.spread
-                    };
-                    var angle = emitter.angle + emitter.spread - (Math.random() * emitter.spread * 2);
-                    var x = emitter.magnitude * Math.cos(angle);
-                    var y = emitter.magnitude * Math.sin(angle);
-
-                    this.createParticle(emitter.point, {x:x,y:y}, emitter.lifetimeMs);
+    ParticleEmitter.prototype.update = function (ctx, dt, elapsedMillis, viewX, viewY, viewWidthX, viewHeightY) {
+        if (this.isActive) {
+            if (this.totalLifetime !== null){
+                if (this.totalLifetime < 0){
+                    this.isActive = false;
+                    return;
+                }else{
+                    this.totalLifetime -= elapsedMillis;
                 }
             }
-        }
-
-        // render particles
-        var pos = 0;
-        var lastActive = 0;
-        var view = this.view;
-        for (var i = 0; i < this.particleCount; i++) {
-            pos = i * 7;
-            if (view[pos + 6] > 0) {
-                lastActive = i;
-                view[pos + 6] -= elapsedMillis;
-                addVectors(view, pos, pos + 2); // add velocity to position
-                addVectors(view, pos + 2, pos + 4); // add acceleration to velocity
-                if (view[pos] >= viewX && view[pos] <= viewWidthX && view[pos + 1] >= viewY && view[pos + 1] <= viewHeightY) {
-                    ctx.fillRect(view[pos], view[pos + 1], 2, 2);
+            if (Array.isArray(this.color)) {
+                ctx.fillStyle = this.color[this.colorPointer];
+                if (this.colorPointer === this.color.length) {
+                    this.colorPointer = 0;
+                } else {
+                    this.colorPointer += 1;
+                }
+            } else {
+                ctx.fillStyle = this.color;
+            }
+            this.elapsed += elapsedMillis;
+            if (this.elapsed > 100) {
+                this.elapsed = 0;
+                for (var i = 0; i < this.emissionRate; i++) {
+                    var angle = this.angle + this.spread - (Math.random() * this.spread * 2);
+                    var x = this.magnitude * Math.cos(angle);
+                    var y = this.magnitude * Math.sin(angle);
+                    this.createParticle(this.point, {x:x, y:y}, this.lifetimeMs);
                 }
             }
-        }
-        this.particleCount = lastActive;
 
+            // render particles
+            var pos = 0;
+            var lastActive = 0;
+            var view = this.view;
+            for (var i = 0; i < this.particleCount; i++) {
+                pos = i * 7;
+                if (view[pos + 6] > 0) {
+                    lastActive = i;
+                    view[pos + 6] -= elapsedMillis;
+                    addVectors(view, pos, pos + 2); // add velocity to position
+                    addVectors(view, pos + 2, pos + 4); // add acceleration to velocity
+                    if (view[pos] >= viewX && view[pos] <= viewWidthX && view[pos + 1] >= viewY && view[pos + 1] <= viewHeightY) {
+                        ctx.fillRect(view[pos], view[pos + 1], 2, 2);
+                    }
+                }
+            }
+            this.particleCount = lastActive;
+        }
     };
 
     /**
