@@ -764,7 +764,6 @@ window.Smila = function () {
      */
     var ParticleEmitter = Smila.ParticleEmitter = function (e) {
         var particleCount = (typeof e === 'undefined') ? DEFAULT_PARTICLE_COUNT : e.particleCount || DEFAULT_PARTICLE_COUNT;
-
         this.point = e.point || e.p;
         this.velocity = e.velocity || e.v;
         this.spread = e.spread || e.s;
@@ -779,7 +778,7 @@ window.Smila = function () {
         var data = new ArrayBuffer(particleCount * PARTICLE_BYTE_SIZE);
         this.view = new Float32Array(data);
         this.pointer = 0;
-        this.isActive = true;
+        this.isActive = typeof e.active === 'undefined' ? true : e.active;
         this.particleCount = 0;
     };
 
