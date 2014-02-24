@@ -158,7 +158,6 @@ window.Smila = function () {
         context.rotate(this.angleInRadians);
         try {
             if (this._outline) {
-                console.log("yaa")
                 context.drawImage(this.imgOutlined, sx, sy, this.frameWidth, this.frameHeight, 0, 0, this.frameWidth, this.frameHeight);
             } else {
                 context.drawImage(this.img, sx, sy, this.frameWidth, this.frameHeight, 0, 0, this.frameWidth, this.frameHeight);
@@ -765,7 +764,8 @@ window.Smila = function () {
     var ParticleEmitter = Smila.ParticleEmitter = function (e) {
         var particleCount = (typeof e === 'undefined') ? DEFAULT_PARTICLE_COUNT : e.particleCount || DEFAULT_PARTICLE_COUNT;
         this.point = e.point || e.p;
-        this.velocity = e.velocity || e.v;
+        this.velocity = e.velocity || e.v || {x:0,y:0};
+        this.direction = e.dir || e.direction;
         this.spread = e.spread || e.s;
         this.emissionRate = e.emissionRate || e.e;
         this.lifetimeMs = e.lifetimeMs || e.ttl || 10000;
@@ -773,8 +773,8 @@ window.Smila = function () {
         this.totalLifetime = e.totalLifetime || e.tlt ||  null;
         this.elapsed = 0;
         this.colorPointer = 0;
-        this.angle = Math.atan2(this.velocity.y, this.velocity.x)
-        this.magnitude = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.y * this.velocity.y);
+        this.angle = Math.atan2(this.direction.y, this.direction.x)
+        this.magnitude = Math.sqrt(this.direction.x * this.direction.x + this.direction.y * this.direction.y);
         var data = new ArrayBuffer(particleCount * PARTICLE_BYTE_SIZE);
         this.view = new Float32Array(data);
         this.pointer = 0;
@@ -799,23 +799,6 @@ window.Smila = function () {
         return result;
     };
 
-    // DELETE ME!
-    ParticleEmitter.prototype.setEmitter = function (point, velocity, spread, emissionRate, lifetimeMs, color) {
-        this.emitter = {
-            point:point,
-            velocity:velocity,
-            spread:spread,
-            emissionRate:emissionRate || 4,
-            lifetimeMs:lifetimeMs || 10000,
-            color:color || "#99CCFF",
-            elapsed:0,
-            colorPointer:0,
-            angle:Math.atan2(velocity.y, velocity.x),
-            magnitude:Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y)
-        };
-    };
-
-
     ParticleEmitter.prototype.update = function (ctx, dt, elapsedMillis, viewX, viewY, viewWidthX, viewHeightY) {
         if (this.isActive) {
             if (this.totalLifetime !== null){
@@ -837,13 +820,15 @@ window.Smila = function () {
                 ctx.fillStyle = this.color;
             }
             this.elapsed += elapsedMillis;
-            if (this.elapsed > 100) {
+            if (this.elapsed > 50) {
                 this.elapsed = 0;
-                for (var i = 0; i < this.emissionRate; i++) {
-                    var angle = this.angle + this.spread - (Math.random() * this.spread * 2);
-                    var x = this.magnitude * Math.cos(angle);
-                    var y = this.magnitude * Math.sin(angle);
-                    this.createParticle(this.point, {x:x, y:y}, this.lifetimeMs);
+                var angle = 0;
+                for (var i = 0; i < this.emissionRate/2; i++) {
+                    angle = this.angle + this.spread - (Math.random() * this.spread * 2);
+                    this.createParticle(this.point, {
+                        x:this.magnitude * Math.cos(angle),
+                        y:this.magnitude * Math.sin(angle)},
+                        this.lifetimeMs);
                 }
             }
 
@@ -864,6 +849,9 @@ window.Smila = function () {
                 }
             }
             this.particleCount = lastActive;
+
+            this.point.x += this.velocity.x;
+            this.point.y += this.velocity.y;
         }
     };
 

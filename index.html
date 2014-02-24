@@ -89,14 +89,13 @@
             Smila.Renderer.add(entity2);
 
             var ps = Smila.Renderer.createParticleEmitter({
-                particleCount : 5000,
+                particleCount : 200,
                 p:  {x:140,y:140},
-                v : {x:0,y:-0.9},
+                v : {x:0,y:0},
+                dir : {x:0,y:.6},
                 s : Math.PI,
-                e : 112,
-                ttl : 1.4 * 1000,
-                totalLifetime : 422,
-                active : false,
+                e : 20,
+                ttl : .2 * 1000,
                 color : ["#FF0033","#FFFF33","#FF9900"]
             });
 
