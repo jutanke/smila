@@ -115,7 +115,6 @@ window.Smila = function () {
         this.x = oldX;
         this.y = oldY;
         return canvas;
-        this._mouseIsOver = false;
     };
 
     Sprite.prototype.toBase64 = function () {
@@ -138,6 +137,7 @@ window.Smila = function () {
                         }
                     }
                 }
+                if (mousePos.x )
                 if (this._mouseIsOver !== currentMouseIsOver) {
                     if (currentMouseIsOver) {
                         if (this.mouseEnter !== null) this.mouseEnter.call(this);
@@ -156,14 +156,11 @@ window.Smila = function () {
         if (this.zIndexByYPos) this.z = y + (this.frameHeight / 2);
         context.translate(x, y);
         context.rotate(this.angleInRadians);
-        try {
-            if (this._outline) {
-                context.drawImage(this.imgOutlined, sx, sy, this.frameWidth, this.frameHeight, 0, 0, this.frameWidth, this.frameHeight);
-            } else {
-                context.drawImage(this.img, sx, sy, this.frameWidth, this.frameHeight, 0, 0, this.frameWidth, this.frameHeight);
-            }
-        } catch (e) {
-            console.error(e);
+        if (this._outline) {
+            context.drawImage(this.imgOutlined, sx, sy, this.frameWidth, this.frameHeight, 0, 0, this.frameWidth, this.frameHeight);
+        } else {
+            context.drawImage(this.img, sx, sy, this.frameWidth, this.frameHeight, 0, 0, this.frameWidth, this.frameHeight);
+            //context.drawImage(this.img, sx, sy, this.frameWidth, this.frameHeight, minusx, minusy, this.frameWidth, this.frameHeight);
         }
         context.rotate(-this.angleInRadians);
         context.translate(-x, -y);
@@ -291,6 +288,7 @@ window.Smila = function () {
 
     Entity.prototype.onUpdate = function (callback) {
         this.updateCallback = callback;
+        return this;
     };
 
     Entity.prototype.animate = function (key) {
@@ -313,6 +311,7 @@ window.Smila = function () {
                     break;
             }
         }
+        return this;
     };
 
     Entity.prototype.update = function (dt, elapsedMillis) {
@@ -336,8 +335,8 @@ window.Smila = function () {
      *
      * @type {Function}
      */
-    var Map = Smila.Map = function () {
-
+    var Map = Smila.Map = function (h) {
+        this.h = h;
     };
 
     /**
@@ -383,9 +382,36 @@ window.Smila = function () {
      */
     var spriteCache = {};
 
+    /**
+     * Private Cache for
+     * @type {Object}
+     */
+    var landscapeCache = {};
+
     var camera = null;
 
     var DataStore = Smila.DataStore = {
+
+        /**
+         * puts maps into the Datastore
+         * @param mapData {Object} or {Array} of Objects:
+         * {
+         *      src: "/res/maps/map.json", {String}
+         *      imgFolder: "/res/img/", {String}
+         * }
+         * @param callback {function}
+         */
+        putMap:function (mapData, callback) {
+            if (mapData instanceof Array) {
+                var c = 0;
+                mapData.forEach(function (element) {
+
+
+                });
+            } else {
+
+            }
+        },
 
         /**
          * puts one or multiple Sprite-Layouts (
@@ -560,6 +586,8 @@ window.Smila = function () {
 
     var renderLoopIndex = 0;
 
+    var sortingThread;
+
     var particleEmitters = [];
 
     // Renderer update variables (to not create new objects all the time!)
@@ -575,6 +603,45 @@ window.Smila = function () {
     var rightOuterBound = 0;
     var bottomBound = 0;
     // -------------------------
+
+    var lastI = 0;
+    var MAX_SORT_INDEX = 250;
+
+    /**
+     * sort sprites after its Y-Value
+     * @constructor
+     */
+    var YsortSprites = function(){
+        if (renderItems.length < MAX_SORT_INDEX){
+            // if the number of sprites is low we dont need to split our sorting
+            // Insertionsort: we assume that our list is almost sorted
+            for(var i = 1; i < renderItems.length;i++){
+                var elem = renderItems[i];
+                var j = i;
+                while (j > 1 && renderItems[j-1].y > elem.y){
+                    renderItems[j] = renderItems[j-1];
+                    j--;
+                }
+                renderItems[j] = elem;
+            }
+        }else{
+            var l = Math.min((renderItems.length - 1),(lastI + MAX_SORT_INDEX));
+            for(var i = lastI; i < l;i++){
+                var current = renderItems[i];
+                if (current.y > renderItems[i+1].y){
+                    renderItems[i] = renderItems[i+1];
+                    renderItems[i+1] = current;
+                }
+            }
+
+            lastI += Math.floor(MAX_SORT_INDEX/2);
+            if (lastI > renderItems.length){
+                lastI = 0;
+            }
+
+            console.log("sort: " + lastI);
+        }
+    };
 
     var Renderer = Smila.Renderer = {
 
@@ -609,7 +676,8 @@ window.Smila = function () {
             updateCallbacks = {};
             renderItems = [];
             map = null;
-            sortFunction = SORT_BY_Y_VALUE
+            sortFunction = SORT_BY_Y_VALUE;
+            clearInterval(sortingThread);
         },
 
         isRunning:function () {
@@ -656,6 +724,8 @@ window.Smila = function () {
                         }
                     }
                     thread = requestAnimationFrame(this.update);
+
+                    sortingThread = setInterval(YsortSprites,500);
 
                     camera = new Camera();
 
@@ -717,7 +787,7 @@ window.Smila = function () {
 
 
             // LAST
-            for (var i = 0; i < particleEmitters.length;i++) {
+            for (var i = 0; i < particleEmitters.length; i++) {
                 particleEmitters[i].update(context, dt, elapsed, cameraRealX, cameraRealY, rightOuterBound, bottomBound);
             }
 
@@ -729,21 +799,22 @@ window.Smila = function () {
          *
          * @param e {
          *      point : {x, y}
-         *      velocity : {x, y}
          *      spread : double
          *      emissionRate : Integer
          *      lifetimeMs : Integer
          *      color : String || [String]
+         *      direction : {x, y}
+         *
+         *      velocity : {x, y} { OPTIONAL }
          *      totalLifetime : Integer { OPTIONAL }
          * }
          * @return {Smila.ParticleEmitter}
          */
-        createParticleEmitter:function(e){
+        createParticleEmitter:function (e) {
             var emitter = new ParticleEmitter(e);
             particleEmitters.push(emitter);
             return emitter;
         }
-
     };
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -764,13 +835,13 @@ window.Smila = function () {
     var ParticleEmitter = Smila.ParticleEmitter = function (e) {
         var particleCount = (typeof e === 'undefined') ? DEFAULT_PARTICLE_COUNT : e.particleCount || DEFAULT_PARTICLE_COUNT;
         this.point = e.point || e.p;
-        this.velocity = e.velocity || e.v || {x:0,y:0};
+        this.velocity = e.velocity || e.v || {x:0, y:0};
         this.direction = e.dir || e.direction;
         this.spread = e.spread || e.s;
         this.emissionRate = e.emissionRate || e.e;
         this.lifetimeMs = e.lifetimeMs || e.ttl || 10000;
         this.color = e.color || "#99CCFF";
-        this.totalLifetime = e.totalLifetime || e.tlt ||  null;
+        this.totalLifetime = e.totalLifetime || e.tlt || null;
         this.elapsed = 0;
         this.colorPointer = 0;
         this.angle = Math.atan2(this.direction.y, this.direction.x)
@@ -801,11 +872,11 @@ window.Smila = function () {
 
     ParticleEmitter.prototype.update = function (ctx, dt, elapsedMillis, viewX, viewY, viewWidthX, viewHeightY) {
         if (this.isActive) {
-            if (this.totalLifetime !== null){
-                if (this.totalLifetime < 0){
+            if (this.totalLifetime !== null) {
+                if (this.totalLifetime < 0) {
                     this.isActive = false;
                     return;
-                }else{
+                } else {
                     this.totalLifetime -= elapsedMillis;
                 }
             }
@@ -823,11 +894,11 @@ window.Smila = function () {
             if (this.elapsed > 50) {
                 this.elapsed = 0;
                 var angle = 0;
-                for (var i = 0; i < this.emissionRate/2; i++) {
+                for (var i = 0; i < this.emissionRate / 2; i++) {
                     angle = this.angle + this.spread - (Math.random() * this.spread * 2);
                     this.createParticle(this.point, {
-                        x:this.magnitude * Math.cos(angle),
-                        y:this.magnitude * Math.sin(angle)},
+                            x:this.magnitude * Math.cos(angle),
+                            y:this.magnitude * Math.sin(angle)},
                         this.lifetimeMs);
                 }
             }
