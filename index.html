@@ -8,39 +8,39 @@
 <script src="js/smila.js"></script>
 <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
 <style>
-    *{
-        margin:0;
-        padding:0;
+    * {
+        margin: 0;
+        padding: 0;
     }
 
-    #bg{
+    #bg {
         background: #45484d; /* Old browsers */
-        background: -moz-linear-gradient(top,  #45484d 0%, #000000 100%); /* FF3.6+ */
-        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#45484d), color-stop(100%,#000000)); /* Chrome,Safari4+ */
-        background: -webkit-linear-gradient(top,  #45484d 0%,#000000 100%); /* Chrome10+,Safari5.1+ */
-        background: -o-linear-gradient(top,  #45484d 0%,#000000 100%); /* Opera 11.10+ */
-        background: -ms-linear-gradient(top,  #45484d 0%,#000000 100%); /* IE10+ */
-        background: linear-gradient(to bottom,  #45484d 0%,#000000 100%); /* W3C */
-        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#45484d', endColorstr='#000000',GradientType=0 ); /* IE6-9 */
+        background: -moz-linear-gradient(top, #45484d 0%, #000000 100%); /* FF3.6+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #45484d), color-stop(100%, #000000)); /* Chrome,Safari4+ */
+        background: -webkit-linear-gradient(top, #45484d 0%, #000000 100%); /* Chrome10+,Safari5.1+ */
+        background: -o-linear-gradient(top, #45484d 0%, #000000 100%); /* Opera 11.10+ */
+        background: -ms-linear-gradient(top, #45484d 0%, #000000 100%); /* IE10+ */
+        background: linear-gradient(to bottom, #45484d 0%, #000000 100%); /* W3C */
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr = '#45484d', endColorstr = '#000000', GradientType = 0); /* IE6-9 */
 
         width: 100%;
         height: 100%;
         position: absolute;
-        top:0;
-        left:0;
+        top: 0;
+        left: 0;
     }
 
-    .stats{
+    .stats {
         position: absolute;
-        top:0;
-        right:0;
+        top: 0;
+        right: 0;
     }
 
     canvas {
         background-color: white;
     }
 
-    #smila{
+    #smila {
         /*position: absolute;
         left:50%;
         margin-left:-25%;
@@ -58,88 +58,103 @@
 
         Smila.Renderer.start();
 
-        Smila.DataStore.put({src:"res/img/character.png", w:64, h:64, key:"character", o:true, bm:true}, function () {
+        debugger;
+        Smila.DataStore.putMap([{src:"res/maps/test_map_01.json",key:"map01", imgFolder:"res/img/"}], function () {
+            Smila.DataStore.put({src:"res/img/character.png", w:64, h:64, key:"character", o:true, bm:true}, function () {
 
-            var entity = Smila.DataStore.getEntity("character",
-                    {
-                        "up" : {anims:[{x:2,y:0},{x:0,y:0},{x:1,y:3}],durationPerFrame:300,type:Smila.Animation.Type.BOUNCE},
-                        "down" : {anims:[{x:2,y:2},{x:2,y:1},{x:2,y:3}],durationPerFrame:300,type:Smila.Animation.Type.BOUNCE}
-                    });
+                var entity = Smila.DataStore.getEntity("character",
+                        {
+                            "up":{anims:[
+                                {x:2, y:0},
+                                {x:0, y:0},
+                                {x:1, y:3}
+                            ], durationPerFrame:300, type:Smila.Animation.Type.BOUNCE},
+                            "down":{anims:[
+                                {x:2, y:2},
+                                {x:2, y:1},
+                                {x:2, y:3}
+                            ], durationPerFrame:300, type:Smila.Animation.Type.BOUNCE}
+                        });
 
-            entity.onUpdate(function(dt,elapsed){
+                entity.onUpdate(function (dt, elapsed) {
 
-            });
+                });
 
-            var entity2 = Smila.DataStore.getEntity("character",
-                    {
-                        "up" : {anims:[{x:0,y:0},{x:1,y:1},{x:2,y:0}],durationPerFrame:1000,type:Smila.Animation.Type.BOUNCE}
-                    });
+                var entity2 = Smila.DataStore.getEntity("character",
+                        {
+                            "up":{anims:[
+                                {x:0, y:0},
+                                {x:1, y:1},
+                                {x:2, y:0}
+                            ], durationPerFrame:1000, type:Smila.Animation.Type.BOUNCE}
+                        });
 
-            entity.animate("up").position(10,50);
-            entity2.position(20,60).animate("up");
+                entity.animate("up").position(10, 50);
+                entity2.position(20, 60).animate("up");
 
-            entity.onmouseenter(function(){
-                this.outline(true);
-            });
-            entity.onmouseleave(function(){
-                this.outline(false);
-            });
+                entity.onmouseenter(function () {
+                    this.outline(true);
+                });
+                entity.onmouseleave(function () {
+                    this.outline(false);
+                });
 
-            Smila.Renderer.add(entity);
-            Smila.Renderer.add(entity2);
+                Smila.Renderer.add(entity);
+                Smila.Renderer.add(entity2);
 
-            var ps = Smila.Renderer.createParticleEmitter({
-                particleCount : 100,
-                p:  {x:140,y:140},
-                v : {x:0,y:0},
-                dir : {x:0,y:.6},
-                s : Math.PI,
-                e : 20,
-                ttl : .2 * 1000,
-                color : ["#FF0033","#FFFF33","#FF9900"]
-            });
-
-
-            var sprite2 = Smila.DataStore.get("character_outline");
-            //Smila.Renderer.add(sprite2);
-            sprite2.position(30,30);
-
-            for(var i = 0; i < 1140;i++){
-                Smila.Renderer.add(Smila.DataStore.get("character").position(getRandomInt(0,400),getRandomInt(0,400)));
-            }
+                var ps = Smila.Renderer.createParticleEmitter({
+                    particleCount:100,
+                    p:{x:140, y:140},
+                    v:{x:0, y:0},
+                    dir:{x:0, y:.6},
+                    s:Math.PI,
+                    e:20,
+                    ttl:.2 * 1000,
+                    color:["#FF0033", "#FFFF33", "#FF9900"]
+                });
 
 
-            Smila.Renderer.onUpdate(function(dt, elapsed){
+                var sprite2 = Smila.DataStore.get("character_outline");
+                //Smila.Renderer.add(sprite2);
+                sprite2.position(30, 30);
 
-                if(isKeyPressed(KEY.SPACEBAR)){
-                    entity.animate("down");
+                for (var i = 0; i < 1140; i++) {
+                    Smila.Renderer.add(Smila.DataStore.get("character").position(getRandomInt(0, 400), getRandomInt(0, 400)));
                 }
 
-                var offsetY = 0;
-                var offsetX = 0;
-                if(isKeyPressed(KEY.ARROW_UP)){
-                    offsetY += 0.2 * dt;
-                } if(isKeyPressed(KEY.ARROW_DOWN)){
-                    offsetY -= 0.2 * dt;
-                } if(isKeyPressed(KEY.ARROW_RIGHT)){
-                    offsetX -= 0.2 * dt;
-                } if(isKeyPressed(KEY.ARROW_LEFT)){
-                    offsetX += 0.2 * dt;
-                }
 
-                Smila.Renderer.camera().translate(offsetX,offsetY);
+                Smila.Renderer.onUpdate(function (dt, elapsed) {
 
+                    if (isKeyPressed(KEY.SPACEBAR)) {
+                        entity.animate("down");
+                    }
+
+                    var offsetY = 0;
+                    var offsetX = 0;
+                    if (isKeyPressed(KEY.ARROW_UP)) {
+                        offsetY += 0.2 * dt;
+                    }
+                    if (isKeyPressed(KEY.ARROW_DOWN)) {
+                        offsetY -= 0.2 * dt;
+                    }
+                    if (isKeyPressed(KEY.ARROW_RIGHT)) {
+                        offsetX -= 0.2 * dt;
+                    }
+                    if (isKeyPressed(KEY.ARROW_LEFT)) {
+                        offsetX += 0.2 * dt;
+                    }
+
+                    Smila.Renderer.camera().translate(offsetX, offsetY);
+                });
             });
-
         });
-
     };
 
     /**
      * Returns a random integer between min and max
      * Using Math.round() will give you a non-uniform distribution!
      */
-    function getRandomInt (min, max) {
+    function getRandomInt(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 

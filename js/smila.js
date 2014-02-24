@@ -175,6 +175,17 @@ window.Smila = function () {
         return this.bitmask.test(normalizedX, normalizedY);
     };
 
+    var TileSet = function(canvas, spriteData, firstgid){
+        Sprite.call(this,canvas,spriteData);
+        this.firstgid = firstgid;
+    };
+
+    TileSet.prototype = Object.create(Sprite.prototype);
+
+    TileSet.prototype.setTile = function(id){
+        //TODO implement
+    };
+
     /**
      * @param sprite {Sprite}
      * @param animations {Array}
@@ -335,8 +346,35 @@ window.Smila = function () {
      *
      * @type {Function}
      */
-    var Map = Smila.Map = function (h) {
-        this.h = h;
+    var Map = Smila.Map = function (json,mapData,callback) {
+        var allTilesetsAreLoaded = true;
+        this.tilesets = [];
+        var self = this;
+        for(var i = 0; i < json.tilesets.length && i < 1;i++){ // only load the first!
+            var key = json.tilesets[i].name;
+            if (key in spriteCache){
+                var ctx = spriteCache[key];
+                //this.tilesets.push(new TileSet(ctx.canvas, ctx.meta, json.tilesets[i].firstgid));
+                this.tileset = new TileSet(ctx.canvas, ctx.meta, json.tilesets[i].firstgid);
+            }else{
+                var ts = json.tilesets[i];
+                allTilesetsAreLoaded = false;
+                DataStore.put({
+                    src: mapData.imgFolder + ts.image.replace(/^.*[\\\/]/, ''),
+                    w: ts.tilewidth,
+                    h: ts.tileheight,
+                    key : ts.name
+                },function(){
+                    //todo: When more then 1 tileset is loaded, this code won't work!
+                    var ctx = spriteCache[ts.name];
+                    self.tileset = new TileSet(ctx.canvas, ctx.meta, json.tilesets[i].firstgid);
+                    self.isready = true;
+                    callback();
+                });
+            }
+        }
+        this.isready = allTilesetsAreLoaded;
+        callback();
     };
 
     /**
@@ -386,7 +424,7 @@ window.Smila = function () {
      * Private Cache for
      * @type {Object}
      */
-    var landscapeCache = {};
+    var mapCache = {};
 
     var camera = null;
 
@@ -398,18 +436,38 @@ window.Smila = function () {
          * {
          *      src: "/res/maps/map.json", {String}
          *      imgFolder: "/res/img/", {String}
+         *      key : "map01" {String}
          * }
          * @param callback {function}
          */
         putMap:function (mapData, callback) {
             if (mapData instanceof Array) {
                 var c = 0;
+                var funcLoadHelper = function(element){
+                    return function(json){
+                        if (typeof json === 'string' || json instanceof String){
+                            json = JSON.parse(json);
+                        }
+                        c+=1;
+                        mapCache[element.key] = new Map(json,element,function(){
+                            if(c === mapData.length){
+                                callback();
+                            };
+                        });
+                    };
+                };
                 mapData.forEach(function (element) {
-
-
+                    loadMap(element, funcLoadHelper(element));
                 });
             } else {
-
+                loadMap(mapData,function(json){
+                    if (typeof json === 'string' || json instanceof String){
+                        json = JSON.parse(json);
+                    }
+                    mapCache[mapData.key] = new Map(json,mapData,function(){
+                        callback();
+                    });
+                });
             }
         },
 
@@ -1030,10 +1088,19 @@ window.Smila = function () {
     // ++++++++++  B I T M A T R I X  END ++++++++++
     //
 
-    // Array-Helpers
 
+    var loadMap = function(mapData, callback){
+        log("[Smila::*->loadMap] ... start loading map ...");
+        var xobj = new XMLHttpRequest();
+        xobj.onreadystatechange = function(){
+            if (xobj.readyState == 4) {
+                callback(xobj.responseText);
+            }
+        };
+        xobj.open("GET", mapData.src,true);
+        xobj.send(null);
 
-    // Array-Helpers End
+    };
 
     /**
      * @param spriteData
