@@ -58,8 +58,7 @@
 
         Smila.Renderer.start();
 
-        debugger;
-        Smila.DataStore.putMap([{src:"res/maps/test_map_01.json",key:"map01", imgFolder:"res/img/"}], function () {
+        Smila.DataStore.putMap({src:"res/maps/test_map_01.json",key:"map01", imgFolder:"res/img/"}, function () {
             Smila.DataStore.put({src:"res/img/character.png", w:64, h:64, key:"character", o:true, bm:true}, function () {
 
                 var entity = Smila.DataStore.getEntity("character",
@@ -79,6 +78,9 @@
                 entity.onUpdate(function (dt, elapsed) {
 
                 });
+
+                var map = Smila.DataStore.getMap("map01");
+                Smila.Renderer.setMap(map);
 
                 var entity2 = Smila.DataStore.getEntity("character",
                         {
@@ -162,6 +164,9 @@
 <body>
 <div id="bg">
     <div style="width:800px; height:600px;" id="smila"></div>
+</div>
+<div id="test">
+
 </div>
 </body>
 </html>

@@ -137,15 +137,15 @@ window.Smila = function () {
                         }
                     }
                 }
-                if (mousePos.x )
-                if (this._mouseIsOver !== currentMouseIsOver) {
-                    if (currentMouseIsOver) {
-                        if (this.mouseEnter !== null) this.mouseEnter.call(this);
-                    } else {
-                        if (this.mouseLeave !== null) this.mouseLeave.call(this);
+                if (mousePos.x)
+                    if (this._mouseIsOver !== currentMouseIsOver) {
+                        if (currentMouseIsOver) {
+                            if (this.mouseEnter !== null) this.mouseEnter.call(this);
+                        } else {
+                            if (this.mouseLeave !== null) this.mouseLeave.call(this);
+                        }
+                        this._mouseIsOver = currentMouseIsOver;
                     }
-                    this._mouseIsOver = currentMouseIsOver;
-                }
             }
         }
 
@@ -175,15 +175,21 @@ window.Smila = function () {
         return this.bitmask.test(normalizedX, normalizedY);
     };
 
-    var TileSet = function(canvas, spriteData, firstgid){
-        Sprite.call(this,canvas,spriteData);
+    var TileSet = function (canvas, spriteData, firstgid) {
+        Sprite.call(this, canvas, spriteData);
         this.firstgid = firstgid;
+        this.tileSetWidth = canvas.width / spriteData.w;
     };
 
     TileSet.prototype = Object.create(Sprite.prototype);
 
-    TileSet.prototype.setTile = function(id){
-        //TODO implement
+    TileSet.prototype.setTile = function (id) {
+        if (id < this.firstgid) throw "ERROR: [Smila::TileSet->setTile] Cannot apply id {" + id + "}";
+        var lastRow = id % this.tileSetWidth === 0;
+        var row = Math.floor((id - (this.firstgid - 1)) / this.tileSetWidth);
+        if (lastRow) row -= 1;
+        var column = lastRow ? (this.tileSetWidth - 1) : (id % this.tileSetWidth) - 1;
+        this.subimage(row, column);
     };
 
     /**
@@ -342,39 +348,130 @@ window.Smila = function () {
         }
     };
 
+    var MAP_TILE_SIZE = 500;
+
     /**
      *
      * @type {Function}
      */
-    var Map = Smila.Map = function (json,mapData,callback) {
+    var Map = Smila.Map = function (json, mapData) {
         var allTilesetsAreLoaded = true;
         this.tilesets = [];
+        this.subtiles = [];
+        this.subtilesCtx = [];
+        var xSteps = Math.ceil((json.width * json.tilewidth) / MAP_TILE_SIZE);
+        var ySteps = Math.ceil((json.height * json.tileheight) / MAP_TILE_SIZE);
+        for (var x = 0; x < xSteps; x++) {
+            this.subtiles[x] = [];
+            this.subtilesCtx[x] = [];
+            for (var y = 0; y < ySteps; y++) {
+                this.subtiles[x][y] = null;
+                this.subtilesCtx[x][y] = null;
+            }
+        }
         var self = this;
-        for(var i = 0; i < json.tilesets.length && i < 1;i++){ // only load the first!
+        for (var i = 0; i < json.tilesets.length && i < 1; i++) { // only load the first!
             var key = json.tilesets[i].name;
-            if (key in spriteCache){
+            if (key in spriteCache) {
                 var ctx = spriteCache[key];
                 //this.tilesets.push(new TileSet(ctx.canvas, ctx.meta, json.tilesets[i].firstgid));
-                this.tileset = new TileSet(ctx.canvas, ctx.meta, json.tilesets[i].firstgid);
-            }else{
+                this.tileset = new TileSet(ctx.canvas, ctx.meta, json.tilesets[0].firstgid);
+                this.init(json);
+            } else {
                 var ts = json.tilesets[i];
                 allTilesetsAreLoaded = false;
                 DataStore.put({
-                    src: mapData.imgFolder + ts.image.replace(/^.*[\\\/]/, ''),
-                    w: ts.tilewidth,
-                    h: ts.tileheight,
-                    key : ts.name
-                },function(){
+                    src:mapData.imgFolder + ts.image.replace(/^.*[\\\/]/, ''),
+                    w:ts.tilewidth,
+                    h:ts.tileheight,
+                    key:ts.name
+                }, function () {
                     //todo: When more then 1 tileset is loaded, this code won't work!
                     var ctx = spriteCache[ts.name];
-                    self.tileset = new TileSet(ctx.canvas, ctx.meta, json.tilesets[i].firstgid);
+                    self.tileset = new TileSet(ctx.canvas, ctx.meta, json.tilesets[0].firstgid);
                     self.isready = true;
-                    callback();
+                    self.init(json);
                 });
             }
         }
         this.isready = allTilesetsAreLoaded;
-        callback();
+    };
+
+    Map.prototype.renderBackground = function (ctx, cameraX, cameraY, rightBond, bottomBond) {
+        var x = Math.floor(cameraX / MAP_TILE_SIZE);
+        var y = Math.floor(cameraY / MAP_TILE_SIZE);
+        var X = x + Math.ceil((rightBond - cameraX) / MAP_TILE_SIZE);
+        var Y = y + Math.ceil((bottomBond - cameraY) / MAP_TILE_SIZE);
+        if (x < 0) x = 0;
+        if (y < 0) y = 0;
+        if (x >= X) X = x + 1;
+        if (y >= Y) Y = y + 1;
+
+        for (; x < X; x++) {
+            for (; y < Y; y++) {
+                if (this.subtiles[x][y] !== null){
+                    ctx.drawImage(this.subtiles[x][y], x * MAP_TILE_SIZE, y * MAP_TILE_SIZE);
+                }else{
+                    console.log("null at " + x + "|" + y);
+                }
+
+            }
+        }
+
+    };
+
+    Map.prototype.onReady = function (callback) {
+        if (this.isready) callback();
+        else {
+            var self = this;
+            setTimeout(function () {
+                self.onready(callback);
+            }, 100);
+        }
+        return this;
+    };
+
+    var xxx = false;
+
+    Map.prototype.init = function (json) {
+
+        var tileSet = this.tileset;
+        var bottom = json.layers[0];
+        var x = 0;
+        var y = 0;
+        for (var i = 0; i < bottom.data.length; i++) {
+            var totalX = x * json.tilewidth;
+            var totalY = y * json.tileheight;
+            tileSet.setTile(bottom.data[i]);
+            tileSet.position(totalX, totalY);
+
+            var X = Math.floor(totalX / MAP_TILE_SIZE);
+            var Y = Math.floor(totalY / MAP_TILE_SIZE);
+
+            var ctx;
+            if (this.subtiles[X][Y] === null) {
+                var canvas = document.createElement("canvas");
+                canvas.width = MAP_TILE_SIZE;
+                canvas.height = MAP_TILE_SIZE;
+                ctx = canvas.getContext("2d");
+                this.subtiles[X][Y] = canvas;
+                this.subtilesCtx[X][Y] = ctx;
+                if (X === 0 && Y === 0)
+                document.getElementById("test").appendChild(canvas);
+            } else {
+                //ctx = this.subtiles[X][Y].getContext("2d");
+                ctx = this.subtilesCtx[X][Y];
+                //console.log(" <<" + X + "|" + Y + ">>")
+            }
+            tileSet.render(ctx);
+
+            // accumulate
+            x += 1;
+            if (x >= json.width) {
+                x = 0;
+                y += 1;
+            }
+        }
     };
 
     /**
@@ -443,31 +540,38 @@ window.Smila = function () {
         putMap:function (mapData, callback) {
             if (mapData instanceof Array) {
                 var c = 0;
-                var funcLoadHelper = function(element){
-                    return function(json){
-                        if (typeof json === 'string' || json instanceof String){
+                var funcLoadHelper = function (element) {
+                    return function (json) {
+                        if (typeof json === 'string' || json instanceof String) {
                             json = JSON.parse(json);
                         }
-                        c+=1;
-                        mapCache[element.key] = new Map(json,element,function(){
-                            if(c === mapData.length){
-                                callback();
-                            };
-                        });
+                        c += 1;
+                        mapCache[element.key] = new Map(json, element);
+                        if (c === mapData.length) {
+                            callback();
+                        }
+                        ;
                     };
                 };
                 mapData.forEach(function (element) {
                     loadMap(element, funcLoadHelper(element));
                 });
             } else {
-                loadMap(mapData,function(json){
-                    if (typeof json === 'string' || json instanceof String){
+                loadMap(mapData, function (json) {
+                    if (typeof json === 'string' || json instanceof String) {
                         json = JSON.parse(json);
                     }
-                    mapCache[mapData.key] = new Map(json,mapData,function(){
-                        callback();
-                    });
+                    mapCache[mapData.key] = new Map(json, mapData);
+                    callback();
                 });
+            }
+        },
+
+        getMap:function(key){
+            if (key in mapCache){
+                return mapCache[key];
+            }else{
+                throw "[Smila::DataStore->getMap] Cannot find key {" + key + "}";
             }
         },
 
@@ -669,32 +773,32 @@ window.Smila = function () {
      * sort sprites after its Y-Value
      * @constructor
      */
-    var YsortSprites = function(){
-        if (renderItems.length < MAX_SORT_INDEX){
+    var YsortSprites = function () {
+        if (renderItems.length < MAX_SORT_INDEX) {
             // if the number of sprites is low we dont need to split our sorting
             // Insertionsort: we assume that our list is almost sorted
-            for(var i = 1; i < renderItems.length;i++){
+            for (var i = 1; i < renderItems.length; i++) {
                 var elem = renderItems[i];
                 var j = i;
-                while (j > 1 && renderItems[j-1].y > elem.y){
-                    renderItems[j] = renderItems[j-1];
+                while (j > 1 && renderItems[j - 1].y > elem.y) {
+                    renderItems[j] = renderItems[j - 1];
                     j--;
                 }
                 renderItems[j] = elem;
             }
-        }else{
-            var l = Math.min((renderItems.length - 1),(lastI + MAX_SORT_INDEX));
-            for(var i = lastI; i < l;i++){
+        } else {
+            var l = Math.min((renderItems.length - 1), (lastI + MAX_SORT_INDEX));
+            for (var i = lastI; i < l; i++) {
                 var elem = renderItems[i];
                 var j = i;
-                while (j > 1 && renderItems[j-1].y > elem.y){
-                    renderItems[j] = renderItems[j-1];
+                while (j > 1 && renderItems[j - 1].y > elem.y) {
+                    renderItems[j] = renderItems[j - 1];
                     j--;
                 }
                 renderItems[j] = elem;
             }
-            lastI += Math.floor(MAX_SORT_INDEX/2);
-            if (lastI > renderItems.length){
+            lastI += Math.floor(MAX_SORT_INDEX / 2);
+            if (lastI > renderItems.length) {
                 lastI = 1;
             }
         }
@@ -741,6 +845,11 @@ window.Smila = function () {
             return rendererIsRunning;
         },
 
+        setMap:function(m){
+            map = m;
+            return this;
+        },
+
         /**
          * Add a dynamic sprite to the Renderer. Position changes
          * will always be tracked though this is more performance-
@@ -782,7 +891,7 @@ window.Smila = function () {
                     }
                     thread = requestAnimationFrame(this.update);
 
-                    sortingThread = setInterval(YsortSprites,500);
+                    sortingThread = setInterval(YsortSprites, 500);
 
                     camera = new Camera();
 
@@ -827,6 +936,10 @@ window.Smila = function () {
                 callback.call(callback, elapsed, dt);
             }
 
+            if (map !== null) {
+                map.renderBackground(context, cameraRealX, cameraRealY, rightOuterBound, bottomBound);
+            }
+
             // Idee für die RenderItems:
             // Sortiere die Items nach einem neuen Wert z=x+y
             // Damit kann eine Sprite-Sortierung + Regionalisierung aufgebaut werden!
@@ -841,7 +954,6 @@ window.Smila = function () {
                     }
                 }
             }
-
 
             // LAST
             for (var i = 0; i < particleEmitters.length; i++) {
@@ -1089,15 +1201,15 @@ window.Smila = function () {
     //
 
 
-    var loadMap = function(mapData, callback){
+    var loadMap = function (mapData, callback) {
         log("[Smila::*->loadMap] ... start loading map ...");
         var xobj = new XMLHttpRequest();
-        xobj.onreadystatechange = function(){
+        xobj.onreadystatechange = function () {
             if (xobj.readyState == 4) {
                 callback(xobj.responseText);
             }
         };
-        xobj.open("GET", mapData.src,true);
+        xobj.open("GET", mapData.src, true);
         xobj.send(null);
 
     };
