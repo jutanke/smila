@@ -627,19 +627,18 @@ window.Smila = function () {
         }else{
             var l = Math.min((renderItems.length - 1),(lastI + MAX_SORT_INDEX));
             for(var i = lastI; i < l;i++){
-                var current = renderItems[i];
-                if (current.y > renderItems[i+1].y){
-                    renderItems[i] = renderItems[i+1];
-                    renderItems[i+1] = current;
+                var elem = renderItems[i];
+                var j = i;
+                while (j > 1 && renderItems[j-1].y > elem.y){
+                    renderItems[j] = renderItems[j-1];
+                    j--;
                 }
+                renderItems[j] = elem;
             }
-
             lastI += Math.floor(MAX_SORT_INDEX/2);
             if (lastI > renderItems.length){
-                lastI = 0;
+                lastI = 1;
             }
-
-            console.log("sort: " + lastI);
         }
     };
 
