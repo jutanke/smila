@@ -348,7 +348,7 @@ window.Smila = function () {
         }
     };
 
-    var MAP_TILE_SIZE = 500;
+    var MAP_TILE_SIZE = 10;
 
     /**
      *
@@ -359,14 +359,20 @@ window.Smila = function () {
         this.tilesets = [];
         this.subtiles = [];
         this.subtilesCtx = [];
-        var xSteps = Math.ceil((json.width * json.tilewidth) / MAP_TILE_SIZE);
-        var ySteps = Math.ceil((json.height * json.tileheight) / MAP_TILE_SIZE);
+
+        this.subtileWidth = MAP_TILE_SIZE * json.tilewidth;
+        this.subtileHeight = MAP_TILE_SIZE * json.tileheight;
+
+        var xSteps = Math.ceil((json.width * json.tilewidth) / this.subtileWidth);
+        var ySteps = Math.ceil((json.height * json.tileheight) / this.subtileHeight);
         for (var x = 0; x < xSteps; x++) {
             this.subtiles[x] = [];
             this.subtilesCtx[x] = [];
             for (var y = 0; y < ySteps; y++) {
-                this.subtiles[x][y] = null;
-                this.subtilesCtx[x][y] = null;
+                var canvas = document.createElement("canvas");
+                canvas.width = this.subtileWidth;
+                canvas.height = this.subtileHeight;
+                this.subtiles[x][y] = canvas;
             }
         }
         var self = this;
@@ -398,10 +404,10 @@ window.Smila = function () {
     };
 
     Map.prototype.renderBackground = function (ctx, cameraX, cameraY, rightBond, bottomBond) {
-        var x = Math.floor(cameraX / MAP_TILE_SIZE);
-        var y = Math.floor(cameraY / MAP_TILE_SIZE);
-        var X = x + Math.ceil((rightBond - cameraX) / MAP_TILE_SIZE);
-        var Y = y + Math.ceil((bottomBond - cameraY) / MAP_TILE_SIZE);
+        var x = Math.floor(cameraX / this.subtileWidth);
+        var y = Math.floor(cameraY / this.subtileHeight);
+        var X = x + Math.ceil((rightBond - cameraX) / this.subtileWidth);
+        var Y = y + Math.ceil((bottomBond - cameraY) / this.subtileHeight);
         if (x < 0) x = 0;
         if (y < 0) y = 0;
         if (x >= X) X = x + 1;
@@ -409,9 +415,9 @@ window.Smila = function () {
 
         for (; x < X; x++) {
             for (; y < Y; y++) {
-                if (this.subtiles[x][y] !== null){
-                    ctx.drawImage(this.subtiles[x][y], x * MAP_TILE_SIZE, y * MAP_TILE_SIZE);
-                }else{
+                if (this.subtiles[x][y] !== null) {
+                    ctx.drawImage(this.subtiles[x][y], x * this.subtileWidth, y * this.subtileHeight);
+                } else {
                     console.log("null at " + x + "|" + y);
                 }
 
@@ -433,7 +439,129 @@ window.Smila = function () {
 
     var xxx = false;
 
+
     Map.prototype.init = function (json) {
+
+        var tileset = this.tileset;
+        var bottom = json.layers[0];
+
+        var Xsteps = Math.ceil((json.width * json.tilewidth) / this.subtileWidth);
+        var Ysteps = Math.ceil((json.height * json.tileheight) / this.subtileHeight);
+
+        var subtiles = this.subtiles;
+
+        for (var X = 0; X < subtiles.length; X++) {
+            for (var Y = 0; Y < subtiles[0].length; Y++) {
+                var ctx = subtiles[X][Y].getContext("2d");
+
+                var count = 0;
+
+                var ctxX = 0;
+                var ctxY = 0;
+
+                for (var x = X * this.subtileWidth; x < ((X + 1) * this.subtileWidth) - 1; x += json.tilewidth) {
+                    for (var y = Y * this.subtileHeight; y < ((Y + 1) * this.subtileHeight) - 1; y += json.tileheight) {
+
+                        var tx = x / json.tilewidth;
+                        var ty = y / json.tileheight;
+
+                        var i = ty * json.width + tx;
+                        if(i < bottom.data.length){
+                            tileset.position(ctxX,ctxY);
+                            tileset.setTile(bottom.data[i]);
+                            tileset.render(ctx);
+                            count += 1;
+                        }
+
+                        ctxY += json.tileheight;
+                    }
+                    ctxX += json.tilewidth;
+                }
+
+                console.log(":: " + X + "|" + Y + " - " + count);
+
+            }
+        }
+
+        document.getElementById("test").appendChild(subtiles[1][1]);
+
+    };
+
+    Map.prototype.init4 = function (json) {
+
+        var tileSet = this.tileset;
+        var bottom = json.layers[0];
+        var Xsteps = Math.ceil((json.width * json.tilewidth) / MAP_TILE_SIZE);
+        var Ysteps = Math.ceil((json.height * json.tileheight) / MAP_TILE_SIZE);
+
+        var subtiles = this.subtiles;
+
+        for (var X = 0; X < subtiles.length; X++) {
+            for (var Y = 0; Y < subtiles[0].length; Y++) {
+                var ctx = subtiles[X][Y].getContext("2d");
+
+                var count = 0;
+
+                for (var x = X * MAP_TILE_SIZE; x < ((X + 1) * MAP_TILE_SIZE) - 1; x++) {
+                    for (var y = Y * MAP_TILE_SIZE; y < ((Y + 1) * MAP_TILE_SIZE) - 1; y++) {
+                        var i = y * json.width + x;
+
+                        if (X === 1 && Y === 1) {
+                            console.log("hier");
+                        }
+
+                        if (i < bottom.data.length) {
+                            var tx = x * json.tilewidth;
+                            var ty = y * json.tileheight;
+                            tileSet.position(tx, ty);
+                            tileSet.setTile(bottom.data[i]);
+                            tileSet.render(ctx);
+                            count += 1;
+                        }
+                    }
+                }
+
+
+                //console.log(">" + X + " | " + Y + " r: " + count);
+
+            }
+        }
+
+    };
+
+
+    Map.prototype.init3 = function (json) {
+        console.log("new");
+        var tileSet = this.tileset;
+        var bottom = json.layers[0];
+        var Xsteps = Math.ceil((json.width * json.tilewidth) / MAP_TILE_SIZE);
+        var Ysteps = Math.ceil((json.height * json.tileheight) / MAP_TILE_SIZE);
+
+        for (var x = 0; x < json.width; x++) {
+            for (var y = 0; y < json.height; y++) {
+                var i = y * json.width + x;
+                if (i < bottom.data.length) {
+
+                    var tx = x * json.tilewidth;
+                    var ty = y * json.tileheight;
+
+                    var X = Math.floor(tx / MAP_TILE_SIZE);
+                    var Y = Math.floor(ty / MAP_TILE_SIZE);
+
+                    var ctx = this.subtiles[X][Y].getContext("2d");
+
+                    tileSet.position(tx, ty);
+                    tileSet.setTile(bottom.data[i]);
+                    tileSet.render(ctx);
+
+                }
+            }
+        }
+
+
+    };
+
+    Map.prototype.init2 = function (json) {
 
         var tileSet = this.tileset;
         var bottom = json.layers[0];
@@ -457,7 +585,7 @@ window.Smila = function () {
                 this.subtiles[X][Y] = canvas;
                 this.subtilesCtx[X][Y] = ctx;
                 if (X === 0 && Y === 0)
-                document.getElementById("test").appendChild(canvas);
+                    document.getElementById("test").appendChild(canvas);
             } else {
                 //ctx = this.subtiles[X][Y].getContext("2d");
                 ctx = this.subtilesCtx[X][Y];
@@ -567,10 +695,10 @@ window.Smila = function () {
             }
         },
 
-        getMap:function(key){
-            if (key in mapCache){
+        getMap:function (key) {
+            if (key in mapCache) {
                 return mapCache[key];
-            }else{
+            } else {
                 throw "[Smila::DataStore->getMap] Cannot find key {" + key + "}";
             }
         },
@@ -845,7 +973,7 @@ window.Smila = function () {
             return rendererIsRunning;
         },
 
-        setMap:function(m){
+        setMap:function (m) {
             map = m;
             return this;
         },
