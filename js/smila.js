@@ -460,6 +460,7 @@ window.Smila = function () {
                 var ctxY = 0;
 
                 for (var x = X * this.subtileWidth; x < ((X + 1) * this.subtileWidth) - 1; x += json.tilewidth) {
+                    ctxY = 0;
                     for (var y = Y * this.subtileHeight; y < ((Y + 1) * this.subtileHeight) - 1; y += json.tileheight) {
 
                         var tx = x / json.tilewidth;
@@ -520,7 +521,6 @@ window.Smila = function () {
                         }
                     }
                 }
-
 
                 //console.log(">" + X + " | " + Y + " r: " + count);
 
