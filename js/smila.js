@@ -186,10 +186,13 @@ window.Smila = function () {
     TileSet.prototype.setTile = function (id) {
         if (id < this.firstgid) throw "ERROR: [Smila::TileSet->setTile] Cannot apply id {" + id + "}";
         var lastRow = id % this.tileSetWidth === 0;
+        if (id > 10) {
+            console.log("ya")
+        }
         var row = Math.floor((id - (this.firstgid - 1)) / this.tileSetWidth);
         if (lastRow) row -= 1;
         var column = lastRow ? (this.tileSetWidth - 1) : (id % this.tileSetWidth) - 1;
-        this.subimage(row, column);
+        this.subimage(column,row);
     };
 
     /**
@@ -348,7 +351,7 @@ window.Smila = function () {
         }
     };
 
-    var MAP_TILE_SIZE = 10;
+    var MAP_TILE_SIZE = 100;
 
     /**
      *
@@ -414,6 +417,7 @@ window.Smila = function () {
         if (y < 0) y = 0;
         if (x >= X) X = x + 1;
         if (y >= Y) Y = y + 1;
+        X = Math.min(X, this.subtiles.length);
         for (; x < X; x++) {
             for (var ty = y; ty < Y; ty++) {
                 if (this.subtiles[x][ty] !== null) {
