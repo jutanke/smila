@@ -360,8 +360,8 @@ window.Smila = function () {
     var Map = Smila.Map = function (json, mapData) {
         var allTilesetsAreLoaded = true;
         this.tilesets = [];
-        this.subtiles = [];
-        this.subtilesCtx = [];
+        this.subtiles = [];     // Background
+        this.subtilesTop = [];    // Topground
 
         this.subtileWidth = MAP_TILE_SIZE * json.tilewidth;
         this.subtileHeight = MAP_TILE_SIZE * json.tileheight;
@@ -370,12 +370,16 @@ window.Smila = function () {
         var ySteps = Math.ceil((json.height * json.tileheight) / this.subtileHeight);
         for (var x = 0; x < xSteps; x++) {
             this.subtiles[x] = [];
-            this.subtilesCtx[x] = [];
+            this.subtilesTop[x] = [];
             for (var y = 0; y < ySteps; y++) {
                 var canvas = document.createElement("canvas");
                 canvas.width = this.subtileWidth;
                 canvas.height = this.subtileHeight;
                 this.subtiles[x][y] = canvas;
+                var canvast = document.createElement("canvas");
+                canvast.width = this.subtileWidth;
+                canvast.height = this.subtileHeight;
+                this.subtilesTop[x][y] = canvast;
             }
         }
         var self = this;
@@ -444,8 +448,9 @@ window.Smila = function () {
     Map.prototype.init = function (json) {
         var tileset = this.tileset;
         var bottom = json.layers[0];
+        var top = json.layers[2];
         var subtiles = this.subtiles;
-        for (var X = 0; X < subtiles.length; X++) {
+        /*for (var X = 0; X < subtiles.length; X++) {
             for (var Y = 0; Y < subtiles[0].length; Y++) {
                 var ctx = subtiles[X][Y].getContext("2d");
                 var ctxX = 0;
@@ -464,6 +469,33 @@ window.Smila = function () {
                         ctxY += json.tileheight;
                     }
                     ctxX += json.tilewidth;
+                }
+            }
+        }*/
+        _mapLayerToCanvas(bottom,this.subtiles, this.tileset,json.tilewidth, json.tileheight, json.width, this.subtileWidth,this.subtileHeight);
+        _mapLayerToCanvas(top,this.subtilesTop, this.tileset,json.tilewidth, json.tileheight, json.width, this.subtileWidth,this.subtileHeight);
+    };
+
+    function _mapLayerToCanvas(layer,canvasMatrix, tileset, tilewidth, tileheight, width,subtileWidth,subtileHeight){
+        for (var X = 0; X < canvasMatrix.length; X++) {
+            for (var Y = 0; Y < canvasMatrix[0].length; Y++) {
+                var ctx = canvasMatrix[X][Y].getContext("2d");
+                var ctxX = 0;
+                var ctxY = 0;
+                for (var x = X * subtileWidth; x < ((X + 1) * subtileWidth) - 1; x += tilewidth) {
+                    ctxY = 0;
+                    for (var y = Y * subtileHeight; y < ((Y + 1) * subtileHeight) - 1; y += tileheight) {
+                        var tx = x / tilewidth;
+                        var ty = y / tileheight;
+                        var i = ty * width + tx;
+                        if(i < layer.data.length){
+                            tileset.position(ctxX,ctxY);
+                            tileset.setTile(layer.data[i]);
+                            tileset.render(ctx);
+                        }
+                        ctxY += tileheight;
+                    }
+                    ctxX += tilewidth;
                 }
             }
         }
