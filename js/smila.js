@@ -177,22 +177,42 @@ window.Smila = function () {
 
     var TileSet = function (canvas, spriteData, firstgid) {
         Sprite.call(this, canvas, spriteData);
+        this.spriteData = spriteData;
         this.firstgid = firstgid;
         this.tileSetWidth = canvas.width / spriteData.w;
     };
 
     TileSet.prototype = Object.create(Sprite.prototype);
 
+    /**
+     *
+     * @param id
+     * @return {Boolean} When True, the tile is actually set!
+     */
     TileSet.prototype.setTile = function (id) {
-        if (id < this.firstgid) throw "ERROR: [Smila::TileSet->setTile] Cannot apply id {" + id + "}";
-        var lastRow = id % this.tileSetWidth === 0;
-        if (id > 10) {
-            console.log("ya")
+        //if (id < this.firstgid) throw "ERROR: [Smila::TileSet->setTile] Cannot apply id {" + id + "}";
+        if (id === 0) return false;
+        if (id >= this.firstgid){
+            var lastRow = id % this.tileSetWidth === 0;
+            if (id > 10) {
+                console.log("ya")
+            }
+            var row = Math.floor((id - (this.firstgid - 1)) / this.tileSetWidth);
+            if (lastRow) row -= 1;
+            var column = lastRow ? (this.tileSetWidth - 1) : (id % this.tileSetWidth) - 1;
+            this.subimage(column,row);
+            return true;
         }
-        var row = Math.floor((id - (this.firstgid - 1)) / this.tileSetWidth);
-        if (lastRow) row -= 1;
-        var column = lastRow ? (this.tileSetWidth - 1) : (id % this.tileSetWidth) - 1;
-        this.subimage(column,row);
+        return false;
+    };
+
+    /**
+     * Creates a sprite form the tileset that points to a specific
+     */
+    TileSet.prototype.spliceSprite = function(){
+
+
+
     };
 
     /**
@@ -354,7 +374,18 @@ window.Smila = function () {
     var MAP_TILE_SIZE = 100;
 
     /**
-     *
+     * This is a Tiled-Map (http://www.mapeditor.org/)
+     * The map needs to be squared and split into 4 layers
+     *  ______
+     * | Background (0) - Gets rendered behind all other elements (static)
+     * |  _______
+     * | | Background (1) - Gets rendered behind all other elements but before the 0-Background (static)
+     * | |  ____________
+     * | | | Dymamic (2) - Gets rendered and interacts with other entities based on its y-value (dynamic)
+     * | | |  ______________
+     * | | | | Top (3) - Gets rendered over all other elements, even Particles (static)
+     * | | | |  __________
+     * | | | | | Events (4) - Event system: subtracts the grid id with its tilesets firstgid. 0 Means no event, 1 means "non-movable", all others get triggered
      * @type {Function}
      */
     var Map = Smila.Map = function (json, mapData) {
@@ -362,6 +393,11 @@ window.Smila = function () {
         this.tilesets = [];
         this.subtiles = [];     // Background
         this.subtilesTop = [];    // Topground
+
+        this.currentX = 0;
+        this.currentY = 0;
+        this.currentLX = 1;
+        this.currentLY = 1;
 
         this.subtileWidth = MAP_TILE_SIZE * json.tilewidth;
         this.subtileHeight = MAP_TILE_SIZE * json.tileheight;
@@ -422,6 +458,10 @@ window.Smila = function () {
         if (x >= X) X = x + 1;
         if (y >= Y) Y = y + 1;
         X = Math.min(X, this.subtiles.length);
+        this.currentX = x;
+        this.currentY = y;
+        this.currentLX = X;
+        this.currentLY = Y;
         for (; x < X; x++) {
             for (var ty = y; ty < Y; ty++) {
                 if (this.subtiles[x][ty] !== null) {
@@ -433,6 +473,23 @@ window.Smila = function () {
             }
         }
     };
+
+    Map.prototype.renderTopLayer = function(ctx){
+        // we calculated the positions for this round inside of the method "renderBackground" already,
+        // so we dont need to get them back!
+        var x = this.currentX;
+        var X = this.currentLX;
+        var Y = this.currentLY;
+        for(; x < X;x++){
+            for (var y = this.currentY; y < Y; y++){
+                if (this.subtilesTop[x][y] !== null) {
+                    ctx.drawImage(this.subtilesTop[x][y], x * this.subtileWidth, y * this.subtileHeight);
+                } else {
+                    console.log("null at " + x + "|" + y);
+                }
+            }
+        }
+    }
 
     Map.prototype.onReady = function (callback) {
         if (this.isready) callback();
@@ -448,35 +505,22 @@ window.Smila = function () {
     Map.prototype.init = function (json) {
         var tileset = this.tileset;
         var bottom = json.layers[0];
-        var top = json.layers[2];
+        var bottom2 = json.layers[1];
+        var top = json.layers[3];
         var subtiles = this.subtiles;
-        /*for (var X = 0; X < subtiles.length; X++) {
-            for (var Y = 0; Y < subtiles[0].length; Y++) {
-                var ctx = subtiles[X][Y].getContext("2d");
-                var ctxX = 0;
-                var ctxY = 0;
-                for (var x = X * this.subtileWidth; x < ((X + 1) * this.subtileWidth) - 1; x += json.tilewidth) {
-                    ctxY = 0;
-                    for (var y = Y * this.subtileHeight; y < ((Y + 1) * this.subtileHeight) - 1; y += json.tileheight) {
-                        var tx = x / json.tilewidth;
-                        var ty = y / json.tileheight;
-                        var i = ty * json.width + tx;
-                        if(i < bottom.data.length){
-                            tileset.position(ctxX,ctxY);
-                            tileset.setTile(bottom.data[i]);
-                            tileset.render(ctx);
-                        }
-                        ctxY += json.tileheight;
-                    }
-                    ctxX += json.tilewidth;
-                }
-            }
-        }*/
+        //_mapLayerToCanvas([bottom,bottom2],this.subtiles, this.tileset,json.tilewidth, json.tileheight, json.width, this.subtileWidth,this.subtileHeight);
         _mapLayerToCanvas(bottom,this.subtiles, this.tileset,json.tilewidth, json.tileheight, json.width, this.subtileWidth,this.subtileHeight);
         _mapLayerToCanvas(top,this.subtilesTop, this.tileset,json.tilewidth, json.tileheight, json.width, this.subtileWidth,this.subtileHeight);
     };
 
     function _mapLayerToCanvas(layer,canvasMatrix, tileset, tilewidth, tileheight, width,subtileWidth,subtileHeight){
+        console.log("hi");
+        var sec = null; // currently only 2 extra layers are supported
+        if (Array.isArray(layer)){
+            sec = layer[1];
+            layer = layer[0];
+        }
+
         for (var X = 0; X < canvasMatrix.length; X++) {
             for (var Y = 0; Y < canvasMatrix[0].length; Y++) {
                 var ctx = canvasMatrix[X][Y].getContext("2d");
@@ -490,8 +534,14 @@ window.Smila = function () {
                         var i = ty * width + tx;
                         if(i < layer.data.length){
                             tileset.position(ctxX,ctxY);
-                            tileset.setTile(layer.data[i]);
-                            tileset.render(ctx);
+                            if(tileset.setTile(layer.data[i])){
+                                tileset.render(ctx);
+                            }
+                            if (sec !== null){
+                                if (tileset.setTile(sec.data[i])){
+                                    tileset.render(ctx);
+                                }
+                            }
                         }
                         ctxY += tileheight;
                     }
@@ -985,6 +1035,10 @@ window.Smila = function () {
             // LAST
             for (var i = 0; i < particleEmitters.length; i++) {
                 particleEmitters[i].update(context, dt, elapsed, cameraRealX, cameraRealY, rightOuterBound, bottomBound);
+            }
+
+            if (map !== null) {
+                map.renderTopLayer(context);
             }
 
             thread = requestAnimationFrame(Renderer.update);
