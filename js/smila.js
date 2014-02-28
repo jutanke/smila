@@ -194,9 +194,6 @@ window.Smila = function () {
         if (id === 0) return false;
         if (id >= this.firstgid){
             var lastRow = id % this.tileSetWidth === 0;
-            if (id > 10) {
-                console.log("ya")
-            }
             var row = Math.floor((id - (this.firstgid - 1)) / this.tileSetWidth);
             if (lastRow) row -= 1;
             var column = lastRow ? (this.tileSetWidth - 1) : (id % this.tileSetWidth) - 1;
@@ -209,10 +206,8 @@ window.Smila = function () {
     /**
      * Creates a sprite form the tileset that points to a specific
      */
-    TileSet.prototype.spliceSprite = function(){
-
-
-
+    TileSet.prototype.splice = function(){
+        return new TileSet(this.img, this.spriteData,this.firstgid);
     };
 
     /**
@@ -404,6 +399,9 @@ window.Smila = function () {
 
         var xSteps = Math.ceil((json.width * json.tilewidth) / this.subtileWidth);
         var ySteps = Math.ceil((json.height * json.tileheight) / this.subtileHeight);
+
+        log("[Smila::Map->Ctor] create subs: " + xSteps + " x " + ySteps + "  {" + this.subtileWidth + " x " + this.subtileHeight + "} per Element")
+
         for (var x = 0; x < xSteps; x++) {
             this.subtiles[x] = [];
             this.subtilesTop[x] = [];
@@ -503,18 +501,33 @@ window.Smila = function () {
     };
 
     Map.prototype.init = function (json) {
-        var tileset = this.tileset;
         var bottom = json.layers[0];
         var bottom2 = json.layers[1];
         var top = json.layers[3];
-        var subtiles = this.subtiles;
-        //_mapLayerToCanvas([bottom,bottom2],this.subtiles, this.tileset,json.tilewidth, json.tileheight, json.width, this.subtileWidth,this.subtileHeight);
-        _mapLayerToCanvas(bottom,this.subtiles, this.tileset,json.tilewidth, json.tileheight, json.width, this.subtileWidth,this.subtileHeight);
+        var dyn = json.layers[2];
+        _mapLayerToCanvas([bottom,bottom2],this.subtiles, this.tileset,json.tilewidth, json.tileheight, json.width, this.subtileWidth,this.subtileHeight);
         _mapLayerToCanvas(top,this.subtilesTop, this.tileset,json.tilewidth, json.tileheight, json.width, this.subtileWidth,this.subtileHeight);
+        this.sprites = _createSpritesFromDynamicLayer(dyn, this.tileset, json.width);
+        log("[Smila::Map->init] load dynamic sprites onto map: {" + this.sprites.length + "}");
+    };
+
+    function _createSpritesFromDynamicLayer(layer, tileset, width){
+        var sprites = [];
+        for (var i = 0; i < layer.data.length;i++){
+            var j = layer.data[i];
+            if (j !== 0){
+                var ts = tileset.splice();
+                ts.setTile(j);
+                var y = Math.floor(j / width);
+                var x = j % width;
+                ts.position(x,y);
+                sprites.push(ts);
+            }
+        }
+        return sprites;
     };
 
     function _mapLayerToCanvas(layer,canvasMatrix, tileset, tilewidth, tileheight, width,subtileWidth,subtileHeight){
-        console.log("hi");
         var sec = null; // currently only 2 extra layers are supported
         if (Array.isArray(layer)){
             sec = layer[1];
@@ -924,6 +937,9 @@ window.Smila = function () {
 
         setMap:function (m) {
             map = m;
+            for(var i = 0; i < map.sprites.length; i++){
+                renderItems.push(map.sprites[i]);
+            }
             return this;
         },
 
