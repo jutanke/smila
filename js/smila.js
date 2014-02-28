@@ -494,7 +494,7 @@ window.Smila = function () {
         else {
             var self = this;
             setTimeout(function () {
-                self.onready(callback);
+                self.onReady(callback);
             }, 100);
         }
         return this;
@@ -507,20 +507,21 @@ window.Smila = function () {
         var dyn = json.layers[2];
         _mapLayerToCanvas([bottom,bottom2],this.subtiles, this.tileset,json.tilewidth, json.tileheight, json.width, this.subtileWidth,this.subtileHeight);
         _mapLayerToCanvas(top,this.subtilesTop, this.tileset,json.tilewidth, json.tileheight, json.width, this.subtileWidth,this.subtileHeight);
-        this.sprites = _createSpritesFromDynamicLayer(dyn, this.tileset, json.width);
+        this.sprites = _createSpritesFromDynamicLayer(dyn, this.tileset, json.width,json.tilewidth, json.tileheight);
         log("[Smila::Map->init] load dynamic sprites onto map: {" + this.sprites.length + "}");
     };
 
-    function _createSpritesFromDynamicLayer(layer, tileset, width){
+    function _createSpritesFromDynamicLayer(layer, tileset, width, tilewidth, tileheight){
         var sprites = [];
         for (var i = 0; i < layer.data.length;i++){
             var j = layer.data[i];
             if (j !== 0){
                 var ts = tileset.splice();
                 ts.setTile(j);
-                var y = Math.floor(j / width);
-                var x = j % width;
+                var y = (Math.floor(i / width)) * tileheight;
+                var x = (i % width) * tilewidth;
                 ts.position(x,y);
+                console.log(":::" + x + "|" + y + "   " + width + "    " + i)
                 sprites.push(ts);
             }
         }
@@ -937,9 +938,11 @@ window.Smila = function () {
 
         setMap:function (m) {
             map = m;
-            for(var i = 0; i < map.sprites.length; i++){
-                renderItems.push(map.sprites[i]);
-            }
+            map.onReady(function(){
+                for(var i = 0; i < map.sprites.length; i++){
+                    renderItems.push(map.sprites[i]);
+                }
+            });
             return this;
         },
 
