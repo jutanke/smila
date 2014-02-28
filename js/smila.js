@@ -572,7 +572,6 @@ window.Smila = function () {
                 var y = (Math.floor(i / width)) * tileheight;
                 var x = (i % width) * tilewidth;
                 ts.position(x,y);
-                console.log(":::" + x + "|" + y + "   " + width + "    " + i)
                 sprites.push(ts);
             }
         }
