@@ -381,6 +381,11 @@ window.Smila = function () {
      * | | | | Top (3) - Gets rendered over all other elements, even Particles (static)
      * | | | |  __________
      * | | | | | Events (4) - Event system: subtracts the grid id with its tilesets firstgid. 0 Means no event, 1 means "non-movable", all others get triggered
+     * | | | | |
+     * | | | | |    ************************
+     * | | | | |    * Event-Objects (5) - Event system: Key-Value-Stores to events!
+     * | | | | |    *
+     * | | | | |    *
      * @type {Function}
      */
     var Map = Smila.Map = function (json, mapData) {
@@ -509,6 +514,52 @@ window.Smila = function () {
         _mapLayerToCanvas(top,this.subtilesTop, this.tileset,json.tilewidth, json.tileheight, json.width, this.subtileWidth,this.subtileHeight);
         this.sprites = _createSpritesFromDynamicLayer(dyn, this.tileset, json.width,json.tilewidth, json.tileheight);
         log("[Smila::Map->init] load dynamic sprites onto map: {" + this.sprites.length + "}");
+        if (json.layers.length > 4 && json.tilesets.length > 1){
+            var events = json.layers[4].data;
+            var eventFGID = (json.tilesets[1].firstgid) - 1;
+
+            // Key-Value-store with: x_y : { .. }, like: 10_4 : { name: "Jul" }
+            var eventDataLookup = {};
+            if (json.layers.length > 5){
+                var tileWidth = json.tilewidth;
+                var tileHeight = json.tileheight;
+                var objs = json.layers[5];
+                if(objs.type === "objectgroup"){
+                    for(var i = 0; i < objs.objects.length; i++){
+                        var current = objs.objects[i];
+                        var x = Math.floor(current.x / tileWidth);
+                        var y = Math.floor(current.y / tileHeight);
+                        eventDataLookup[x + "_" + y] = {
+                            name : current.name,
+                            properties : current.properties
+                        }
+                    }
+                }
+            }
+
+
+
+            this.eventLayer = [];
+            for(var x = 0; x < json.width; x++){
+                this.eventLayer[x] = [];
+                for (var y = 0; y < json.height; y++){
+                    var i = y * json.width + x;
+                    if (events[i] === 0) this.eventLayer[x][y] = 0;
+                    else{
+                        var key = x + "_" + y;
+                        var data = {};
+                        var value = events[i] - eventFGID;
+                        if (key in eventDataLookup){
+                            data = eventDataLookup[key];
+                        }
+                        this.eventLayer[x][y] = {
+                            id : events[i] - eventFGID,
+                            data : data
+                        };
+                    }
+                }
+            }
+        }
     };
 
     function _createSpritesFromDynamicLayer(layer, tileset, width, tilewidth, tileheight){
