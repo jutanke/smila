@@ -399,6 +399,9 @@ window.Smila = function () {
         this.currentLX = 1;
         this.currentLY = 1;
 
+        this.w = json.width;
+        this.h = json.height;
+
         this.subtileWidth = MAP_TILE_SIZE * json.tilewidth;
         this.subtileHeight = MAP_TILE_SIZE * json.tileheight;
 
@@ -461,6 +464,7 @@ window.Smila = function () {
         if (x >= X) X = x + 1;
         if (y >= Y) Y = y + 1;
         X = Math.min(X, this.subtiles.length);
+        Y = Math.min(Y, this.subtiles[0].length);
         this.currentX = x;
         this.currentY = y;
         this.currentLX = X;
