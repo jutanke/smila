@@ -3,6 +3,7 @@ Smila
 - 2D-rendering-library
 
 Getting started:
+the Top-Left is 0|0
 
 ```javascript
 
@@ -83,7 +84,7 @@ Smila.DataStore.putMap({
         // Particle System:
         var emitter = Smila.Renderer.createParticleEmitter({
             particleCount : 100,
-            p : {x:100,y:50},
+            p : {x:100,y:50},  // position of the emitter (this value can be changed later!)
             v : {x:0, y:0},
             dir : {x:0, y:.6},
             s : Math.PI,
@@ -91,6 +92,9 @@ Smila.DataStore.putMap({
             ttl: .2 * 1000,
             color: ["#FF0033","#FFFF33"]
         });
+
+        // moves the emitter 10 pixel to the right
+        emitter.point.x += 10;
 
     });
 
