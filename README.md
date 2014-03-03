@@ -27,7 +27,70 @@ Smila.DataStore.putMap({
         bm : true           // bitmask, when true, the mouse collision is pixel perfect {Optional}
     }, function(){
 
+        // create a entity that has different animations.
+        // You can name the animations however you want (for example: up, down and dance)
+        var entity = Smila.DataStore.getEntity("character", {
+            up : {
+                anims : [{x:2,y:0},{x:0,y:1}],
+                durationPerFrame : 300,
+                type : Smila.Animation.Type.BOUNCE
+            },
+            down : {
+                anims : [{x:2,y:2},{x:1,y:1}],
+                durationPerFrame: 300,
+                type : Smila.Animation.Type.ONCE
+            },
+            dance : {
+                anims : [{x:1,y:0},{x:3,y:0},{x:1,y:2}],
+                durationPerFrame: 400,
+                type : Smila.Animation.Type.ENDLESS
+            }
+        });
 
+        // attach the entity to the update cycle
+        entity.onUpdate(function(dt,elapsed){
+            ... do stuff
+        });
+
+        // let the animation "up" play
+        entity.animate("up");
+
+        // set position in Pixel
+        entity.position(10,5);
+
+        // outlines the entity when the mouse enters the sprite
+        entity.onmouseenter(function(){
+            this.outline(true);
+        });
+
+        // removes the entity when the mouse leaves the sprite
+        entity.onmouseleave(function(){
+            this.outline(false);
+        });
+
+        // adds the entity to the render system. From this point on the sprite is visible on screen
+        Smila.Renderer.add(entity);
+
+        // get the map
+        var map = Smila.DataStore.getMap("map");
+
+        // set a map to the renderer
+        Smila.Renderer.setMap(map);
+
+        // translates the viewport to 10x10
+        Smila.Renderer.camera().translate(10,10);
+
+        // Particle System:
+        var emitter = Smila.Renderer.createParticleEmitter({
+            particleCount : 100,
+            p : {x:100,y:50},
+            v : {x:0, y:0},
+            dir : {x:0, y:.6},
+            s : Math.PI,
+            e : 20,
+            ttl: .2 * 1000,
+            color: ["#FF0033","#FFFF33"]
+        });
 
     });
 
