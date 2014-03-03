@@ -601,13 +601,15 @@ window.Smila = function () {
                         var ty = y / tileheight;
                         var i = ty * width + tx;
                         if(i < layer.data.length){
-                            tileset.position(ctxX,ctxY);
-                            if(tileset.setTile(layer.data[i])){
-                                tileset.render(ctx);
-                            }
-                            if (sec !== null){
-                                if (tileset.setTile(sec.data[i])){
+                            if (tx < width){
+                                tileset.position(ctxX,ctxY);
+                                if(tileset.setTile(layer.data[i])){
                                     tileset.render(ctx);
+                                }
+                                if (sec !== null){
+                                    if (tileset.setTile(sec.data[i])){
+                                        tileset.render(ctx);
+                                    }
                                 }
                             }
                         }
