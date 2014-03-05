@@ -712,6 +712,7 @@ window.Smila = function () {
                     callback();
                 });
             }
+            return DataStore;
         },
 
         getMap:function (key) {
