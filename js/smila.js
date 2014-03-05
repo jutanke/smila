@@ -399,6 +399,9 @@ window.Smila = function () {
         this.currentLX = 1;
         this.currentLY = 1;
 
+        this.tilewidth = json.tilewidth;
+        this.tileheight = json.tileheight;
+
         this.w = json.width;
         this.h = json.height;
 
