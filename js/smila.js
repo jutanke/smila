@@ -957,6 +957,10 @@ window.Smila = function () {
 
     var Renderer = Smila.Renderer = {
 
+        dimension:function(){
+            return dimension;
+        },
+
         /**
          * gets called every time the renderer updates
          * @param callback {function} with function(dt, elapsed) { ... }

@@ -64,6 +64,9 @@ Smila.DataStore.putMap({
             this.outline(true);
         });
 
+        // get the render-dimension:
+        var dimension = Smila.Renderer.dimension();
+
         // removes the entity when the mouse leaves the sprite
         entity.onmouseleave(function(){
             this.outline(false);
