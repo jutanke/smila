@@ -17,6 +17,7 @@ window.Smila = function () {
      * {
      *      useWebGL : {Boolean}
      *      imagePath : {String}
+     *      test
      * }
      */
     Smila.Settings = function (options) {
