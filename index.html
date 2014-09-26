@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Smila</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 </head>
 <script src="libs/stats.js"></script>
 <script src="libs/keys.js"></script>
@@ -15,14 +16,6 @@
 
     #bg {
         background: #45484d; /* Old browsers */
-        background: -moz-linear-gradient(top, #45484d 0%, #000000 100%); /* FF3.6+ */
-        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #45484d), color-stop(100%, #000000)); /* Chrome,Safari4+ */
-        background: -webkit-linear-gradient(top, #45484d 0%, #000000 100%); /* Chrome10+,Safari5.1+ */
-        background: -o-linear-gradient(top, #45484d 0%, #000000 100%); /* Opera 11.10+ */
-        background: -ms-linear-gradient(top, #45484d 0%, #000000 100%); /* IE10+ */
-        background: linear-gradient(to bottom, #45484d 0%, #000000 100%); /* W3C */
-        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr = '#45484d', endColorstr = '#000000', GradientType = 0); /* IE6-9 */
-
         width: 100%;
         height: 100%;
         position: absolute;
@@ -41,10 +34,8 @@
     }
 
     #smila {
-        /*position: absolute;
-        left:50%;
-        margin-left:-25%;
-        top:200px;*/
+        margin-left: auto;
+        margin-right: auto;
     }
 
 </style>
@@ -124,6 +115,27 @@
                 }
 
 
+                var up = false;
+                var down = false;
+                var left = false;
+                var right = false;
+
+                var el = document.getElementById("smila");
+                function handleStart(e){
+                    console.log(e);
+                    console.log("Start");
+                    right = true;
+                    down = true;
+                }
+                function handleEnd(e){
+                    console.log(e);
+                    console.log("End");
+                    right = false;
+                    down = false;
+                }
+                el.addEventListener("touchstart", handleStart, false);
+                el.addEventListener("touchend", handleEnd, false);
+
                 Smila.Renderer.onUpdate(function (dt, elapsed) {
 
                     if (isKeyPressed(KEY.SPACEBAR)) {
@@ -132,16 +144,16 @@
 
                     var offsetY = 0;
                     var offsetX = 0;
-                    if (isKeyPressed(KEY.ARROW_UP)) {
+                    if (isKeyPressed(KEY.ARROW_UP) || up) {
                         offsetY += 0.2 * dt;
                     }
-                    if (isKeyPressed(KEY.ARROW_DOWN)) {
+                    if (isKeyPressed(KEY.ARROW_DOWN) || down) {
                         offsetY -= 0.2 * dt;
                     }
-                    if (isKeyPressed(KEY.ARROW_RIGHT)) {
+                    if (isKeyPressed(KEY.ARROW_RIGHT) || right) {
                         offsetX -= 0.2 * dt;
                     }
-                    if (isKeyPressed(KEY.ARROW_LEFT)) {
+                    if (isKeyPressed(KEY.ARROW_LEFT) || left) {
                         offsetX += 0.2 * dt;
                     }
 
@@ -162,7 +174,7 @@
 </script>
 <body>
 <div id="bg">
-    <div style="width:400px; height:400px;" id="smila"></div>
+    <div style="width:325px; height:500px;" id="smila"></div>
 </div>
 <div id="test">
 
