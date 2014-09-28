@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 </head>
 <script src="libs/stats.js"></script>
-<script src="libs/keys.js"></script>
+<!--script src="libs/keys.js"></script-->
+<script src="libs/touchController.mini.js"></script>
 <script src="js/smila.js"></script>
 <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
 <style>
@@ -114,46 +115,49 @@
                     Smila.Renderer.add(Smila.DataStore.get("character").position(getRandomInt(0, 400), getRandomInt(0, 400)));
                 }
 
+                console.log("qq1");
+                var dpad = new TouchController.DPad("dpad", {WASDEvents:true, bottom: 10, left: 10});
 
-                var up = false;
-                var down = false;
-                var left = false;
-                var right = false;
+                dpad.onLeft = function(){
+                    console.log("LEFT");
+                }
 
-                var el = document.getElementById("smila");
-                function handleStart(e){
-                    console.log(e);
-                    console.log("Start");
-                    right = true;
-                    down = true;
+                dpad.onDown = function(){
+                    console.log("BOTTOM");
                 }
-                function handleEnd(e){
-                    console.log(e);
-                    console.log("End");
-                    right = false;
-                    down = false;
+
+                dpad.onUp = function(){
+                    console.log("TOP");
                 }
-                el.addEventListener("touchstart", handleStart, false);
-                el.addEventListener("touchend", handleEnd, false);
+
+                dpad.onRight = function(){
+                    console.log("RIGHT");
+                }
+
+                var UP = TouchController.DPad.UP;
+                var DOWN = TouchController.DPad.DOWN;
+                var LEFT = TouchController.DPad.LEFT;
+                var RIGHT = TouchController.DPad.RIGHT;
 
                 Smila.Renderer.onUpdate(function (dt, elapsed) {
 
-                    if (isKeyPressed(KEY.SPACEBAR)) {
-                        entity.animate("down");
-                    }
+                    //if (isKeyPressed(KEY.SPACEBAR)) {
+                    //    entity.animate("down");
+                    //}
 
                     var offsetY = 0;
                     var offsetX = 0;
-                    if (isKeyPressed(KEY.ARROW_UP) || up) {
+                    var dir = dpad.getDirection();
+                    if (dir === UP) {
                         offsetY += 0.2 * dt;
                     }
-                    if (isKeyPressed(KEY.ARROW_DOWN) || down) {
+                    if (dir === DOWN) {
                         offsetY -= 0.2 * dt;
                     }
-                    if (isKeyPressed(KEY.ARROW_RIGHT) || right) {
+                    if (dir === RIGHT) {
                         offsetX -= 0.2 * dt;
                     }
-                    if (isKeyPressed(KEY.ARROW_LEFT) || left) {
+                    if (dir === LEFT) {
                         offsetX += 0.2 * dt;
                     }
 
@@ -175,6 +179,7 @@
 <body>
 <div id="bg">
     <div style="width:325px; height:500px;" id="smila"></div>
+    <div id="dpad"></div>
 </div>
 <div id="test">
 
