@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smila</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+</head>
+<script src="libs/stats.js"></script>
+<!--script src="libs/keys.js"></script-->
+<script src="libs/touchController.mini.js"></script>
+<script src="js/smila.js"></script>
+<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    #bg {
+        background: #45484d; /* Old browsers */
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .stats {
+        position: absolute;
+        top: 0;
+        right: 0;
+    }
+
+    canvas {
+        background-color: white;
+    }
+
+    #smila {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+</style>
+<script>
+
+    window.onload = function () {
+
+        Smila.Settings({
+            verbose:true
+        });
+
+        Smila.Renderer.start();
+
+        Smila.DataStore.putMap({src:"res/maps/test_map_01.json",key:"map01", imgFolder:"res/img/"}, function () {
+            Smila.DataStore.put({src:"res/img/character.png", w:64, h:64, key:"character", o:true, bm:true}, function () {
+
+                var entity = Smila.DataStore.getEntity("character",
+                        {
+                            "up":{anims:[
+                                {x:2, y:0},
+                                {x:0, y:0},
+                                {x:1, y:3}
+                            ], durationPerFrame:300, type:Smila.Animation.Type.BOUNCE},
+                            "down":{anims:[
+                                {x:2, y:2},
+                                {x:2, y:1},
+                                {x:2, y:3}
+                            ], durationPerFrame:300, type:Smila.Animation.Type.BOUNCE}
+                        });
+
+                entity.onUpdate(function (dt, elapsed) {
+                });
+
+                var map = Smila.DataStore.getMap("map01");
+                Smila.Renderer.setMap(map);
+
+                var entity2 = Smila.DataStore.getEntity("character",
+                        {
+                            "up":{anims:[
+                                {x:0, y:0},
+                                {x:1, y:1},
+                                {x:2, y:0}
+                            ], durationPerFrame:1000, type:Smila.Animation.Type.BOUNCE}
+                        });
+
+                entity.animate("up").position(10, 50);
+                entity2.position(20, 60).animate("up");
+
+                entity.onmouseenter(function () {
+                    this.outline(true);
+                });
+                entity.onmouseleave(function () {
+                    this.outline(false);
+                });
+
+                Smila.Renderer.add(entity);
+                Smila.Renderer.add(entity2);
+
+                var ps = Smila.Renderer.createParticleEmitter({
+                    particleCount:100,
+                    p:{x:140, y:140},
+                    v:{x:0, y:0},
+                    dir:{x:0, y:.6},
+                    s:Math.PI,
+                    e:20,
+                    ttl:.2 * 1000,
+                    color:["#FF0033", "#FFFF33", "#FF9900"]
+                });
+
+
+                var sprite2 = Smila.DataStore.get("character_outline");
+                //Smila.Renderer.add(sprite2);
+                sprite2.position(30, 30);
+
+                for (var i = 0; i < 0; i++) {
+                    Smila.Renderer.add(Smila.DataStore.get("character").position(getRandomInt(0, 1800), getRandomInt(0, 1800)));
+                }
+
+                console.log("qq1");
+                var dpad = new TouchController.DPad("dpad", {WASDEvents:true, bottom: 10, left: 10});
+
+                dpad.onLeft = function(){
+                    console.log("LEFT");
+                }
+
+                dpad.onDown = function(){
+                    console.log("BOTTOM");
+                }
+
+                dpad.onUp = function(){
+                    console.log("TOP");
+                }
+
+                dpad.onRight = function(){
+                    console.log("RIGHT");
+                }
+
+                var UP = TouchController.DPad.UP;
+                var DOWN = TouchController.DPad.DOWN;
+                var LEFT = TouchController.DPad.LEFT;
+                var RIGHT = TouchController.DPad.RIGHT;
+
+                Smila.Renderer.onUpdate(function (dt, elapsed) {
+
+                    //if (isKeyPressed(KEY.SPACEBAR)) {
+                    //    entity.animate("down");
+                    //}
+
+                    var offsetY = 0;
+                    var offsetX = 0;
+                    var dir = dpad.getDirection();
+                    if (dir === UP) {
+                        offsetY += 0.2 * dt;
+                    }
+                    if (dir === DOWN) {
+                        offsetY -= 0.2 * dt;
+                    }
+                    if (dir === RIGHT) {
+                        offsetX -= 0.2 * dt;
+                    }
+                    if (dir === LEFT) {
+                        offsetX += 0.2 * dt;
+                    }
+
+                    Smila.Renderer.camera().translate(offsetX, offsetY);
+                });
+            });
+        });
+    };
+
+    /**
+     * Returns a random integer between min and max
+     * Using Math.round() will give you a non-uniform distribution!
+     */
+    function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+</script>
+<body>
+<div id="bg">
+    <div style="width:325px; height:500px;" id="smila"></div>
+    <div id="dpad"></div>
+</div>
+<div id="test">
+
+</div>
+</body>
+</html>
