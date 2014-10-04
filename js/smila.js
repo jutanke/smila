@@ -789,7 +789,12 @@ window.Smila = function () {
         get:function (key) {
             if (key in spriteCache) {
                 var data = spriteCache[key];
-                return new Sprite(data.canvas, data.meta);
+                if (data.isDynamic) {
+                    return new DynamicSprite(data[key].canvas);
+                } else {
+                    return new Sprite(data.canvas, data.meta);
+                }
+
             }
             throw "[Smila::DataStore->get] cannot find {" + key + "}";
         },
@@ -825,17 +830,6 @@ window.Smila = function () {
             }
             throw "[Smila::DataStore->getAnimation] cannot find {" + key + "}";
         },
-
-        /**
-         *
-         * @param key {String}
-         */
-        getDynamicSprite:function(key){
-            if(key in spriteCache){
-                return new DynamicSprite(spriteCache[key]);
-            }
-            throw "[Smila::DataStore->getAnimation] cannot find {" + key + "}";
-        }
 
     };
 
@@ -1420,12 +1414,16 @@ window.Smila = function () {
      */
     var loadSprite = function (spriteData, callback, error) {
         log("[Smila::*->loadSprite] {" + spriteData.key + "}");
-        spriteData.w = spriteData.w || spriteData.width || 1;
-        spriteData.h = spriteData.h || spriteData.height || 1;
+        spriteData.w = spriteData.w || spriteData.width || -1;
+        spriteData.h = spriteData.h || spriteData.height || -1;
         spriteData.o = spriteData.o || spriteData.outline || false;
         spriteData.bm = spriteData.bm || spriteData.bitmask || false;
         if (typeof spriteData.outlineColor !== 'undefined' || typeof spriteData.ocol !== 'undefined') {
             spriteData.ocol = spriteData.outlineColor || spriteData.ocol;
+        }
+        spriteData.isDynamic = false;
+        if (spriteData.w === -1 && spriteData.h === -1){
+            spriteData.isDynamic = true;
         }
 
         var img = new Image();
