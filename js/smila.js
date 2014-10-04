@@ -369,6 +369,19 @@ window.Smila = function () {
 
     var MAP_TILE_SIZE = 100;
 
+    var DynamicSprite = Smila.DynamicSprite = function(canvas){
+        this.img = canvas;
+    };
+
+    DynamicSprite.prototype.render = function(context, x, y, sx, sy, w, h, mirrored, angleInRadians){
+        var wh = (0.5 + w/2) << 0;
+        var hh = (0.5 + h/2) << 0;
+        context.translate(x,y);
+        if (mirrored) context.scale(-1,1);
+        if (angleInRadians !== undefined) context.rotate(angleInRadians);
+        context.drawImage(this.img,sx,sy,w,h,-wh,-hh,w,h);
+    };
+
     /**
      * This is a Tiled-Map (http://www.mapeditor.org/)
      * The map needs to be squared and split into 4 layers
@@ -809,6 +822,17 @@ window.Smila = function () {
             if (key in spriteCache) {
                 var data = spriteCache[key];
                 return new Entity(data.canvas, data.meta, animations);
+            }
+            throw "[Smila::DataStore->getAnimation] cannot find {" + key + "}";
+        },
+
+        /**
+         *
+         * @param key {String}
+         */
+        getDynamicSprite:function(key){
+            if(key in spriteCache){
+                return new DynamicSprite(spriteCache[key]);
             }
             throw "[Smila::DataStore->getAnimation] cannot find {" + key + "}";
         }
@@ -1396,10 +1420,10 @@ window.Smila = function () {
      */
     var loadSprite = function (spriteData, callback, error) {
         log("[Smila::*->loadSprite] {" + spriteData.key + "}");
-        spriteData.w = spriteData.w || spriteData.width;
-        spriteData.h = spriteData.h || spriteData.height;
-        spriteData.o = spriteData.o || spriteData.outline | false;
-        spriteData.bm = spriteData.bm || spriteData.bitmask | false;
+        spriteData.w = spriteData.w || spriteData.width || 1;
+        spriteData.h = spriteData.h || spriteData.height || 1;
+        spriteData.o = spriteData.o || spriteData.outline || false;
+        spriteData.bm = spriteData.bm || spriteData.bitmask || false;
         if (typeof spriteData.outlineColor !== 'undefined' || typeof spriteData.ocol !== 'undefined') {
             spriteData.ocol = spriteData.outlineColor || spriteData.ocol;
         }
