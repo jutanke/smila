@@ -44,14 +44,30 @@
             {key:"character", src: "res/img/character.png"},
             function(){
 
-                var a = Smila.DataStore.get("character", {w: 64, h:64});
+                var a = Smila.DataStore.getUniform("character", {w: 64, h:64});
                 a.position(0,0);
+                a.subimage(2,3);
+                a.horizontalMirror(true);
 
                 setInterval(function(){
                     a.angleInRadians += 0.1;
                 }, 250);
 
+                var b = Smila.DataStore.getUniform("character", {w: 64, h:64});
+                b.position(70,80);
+                b.verticalMirror(true);
+
+                var c = Smila.DataStore.getUniform("character", {w: 64, h:64});
+                c.position(130,5);
+                c.horizontalMirror(true);
+                var d = Smila.DataStore.getUniform("character", {w: 64, h:64});
+                d.position(130,80);
+
                 renderer.add(a);
+                renderer.add(b);
+                renderer.add(c);
+                renderer.add(d);
+                console.log(renderer.renderItems);
 
                 renderer.onUpdate = function(dt, elapsed){
                     var offsetY = 0, offsetX = 0;

@@ -9,18 +9,22 @@
 window.Smila = function () {
 
     if (!window.CanvasRenderingContext2D) {
-        throw "Smila-Rendering is not supported by the browser! (#1)";
+        throw logStr("Smila-Rendering is not supported by the browser! (#1)");
     }
 
     if (!isDefined(performance) && !isDefined(performance.now)){
-        throw "Smila-Rendering is not supported by the browser! (#2)";
+        throw logStr("Smila-Rendering is not supported by the browser! (#2)");
     }
 
     var VERBOSE = true;
 
+    function logStr(msg) {
+        return "[smila2][" + new Date().toISOString().substring(12) + "]" + msg;
+    }
+
     function log(msg) {
         if (VERBOSE) {
-            console.log("[smila2][" + new Date().toISOString().substring(12) + "]" + msg);
+            console.log(logStr(msg));
         }
     }
 
@@ -139,11 +143,12 @@ window.Smila = function () {
         function sort(){
             // Insertionsort
             var renderItems = renderer.renderItems;
-            var current, j;
+            var current, j, currentz;
             for (var i = 1; i < renderItems.length; i++) {
-                current = renderItems[i].z;
+                current = renderItems[i];
+                currentz = current.z;
                 j = i;
-                while(j > 0 && renderItems[j-1].z > current) {
+                while(j > 0 && renderItems[j-1].z > currentz) {
                     renderItems[j] = renderItems[j-1];
                     j = j-1;
                 }
@@ -175,7 +180,7 @@ window.Smila = function () {
      */
     Renderer.prototype.resume = function(){
         if (!this._ispaused) {
-            throw "Smila: Cannot resume unpaused Renderer!";
+            throw logStr("Cannot resume unpaused Renderer!");
         }
         cancelAnimationFrame(this.thread);
         clearTimeout(this.sortThread);
@@ -195,7 +200,6 @@ window.Smila = function () {
     // Sprite
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
     var Sprite = Smila.Sprite = function(canvas, options){
         if (!isDefined(options)) options = {};
         this.img = canvas;
@@ -209,11 +213,42 @@ window.Smila = function () {
             options.zIndexByYPos : false;
         this.x = 0 | 0;
         this.y = 0 | 0;
-        this.z = 0| 0;
+        this.z = isDefined(options.z) ? options.z |0 : 0| 0;
         this.angleInRadians = 0;
         this.tl_x = this.x - this.w_2; // TOP-LEFT-X
         this.tl_y = this.y - this.h_2; // TOP-LEFT-Y
-        this.mirror = false;
+        this.mirrory = false;
+        this.mirrorx = false;
+    };
+
+    /**
+     *
+     * @param w
+     * @returns {*}
+     */
+    Sprite.prototype.width = function(w){
+        if(arguments.length > 0) {
+            this.w = w;
+            this.w_2 = Math.floor(w/2);
+            return this;
+        }  else {
+            return this.w;
+        }
+    };
+
+    /**
+     *
+     * @param h
+     * @returns {*}
+     */
+    Sprite.prototype.height = function(h){
+        if(arguments.length > 0) {
+            this.h = h;
+            this.h_2 = Math.floor(h/2);
+            return this;
+        }  else {
+            return this.h;
+        }
     };
 
     /**
@@ -235,12 +270,19 @@ window.Smila = function () {
         }
     };
 
+    /**
+     * Top-Left sprite position
+     * @param x
+     * @param y
+     * @returns {{x: (number|*), y: (number|*)}}
+     */
     Sprite.prototype.position = function(x,y){
         if (arguments.length > 0){
             this.tl_x = x;
             this.tl_y = y;
             this.x = x + this.w_2;
             this.y = y + this.h_2;
+            return this;
         } else {
             return {x: this.tl_x, y: this.tl_y};
         }
@@ -253,13 +295,50 @@ window.Smila = function () {
         var h = this.h;
         var wh = (0.5 + w/2) << 0;
         var hh = (0.5 + h/2) << 0;
+        var mirrorx = this.mirrorx;
+        var mirrory = this.mirrory;
         context.translate(x,y);
-        if (this.mirror) context.scale(-1,1);
         if (this.angleInRadians !== 0) context.rotate(this.angleInRadians);
+        if (mirrory && mirrorx) context.scale(-1,-1);
+        else if (mirrory) context.scale(-1,1);
+        else if (mirrorx) context.scale(1,-1);
+
         context.drawImage(this.img,this.ox,this.oy,w,h,-wh,-hh,w,h);
+
+        if (mirrory && mirrorx) context.scale(1,1);
+        else if (mirrory) context.scale(-1,1);
+        else if (mirrorx) context.scale(1,-1);
         if (this.angleInRadians !== 0) context.rotate(-this.angleInRadians);
         context.translate(-x, -y);
     };
+
+    Sprite.prototype.subimage = function(x,y){
+        this.ox = x * this.w;
+        this.oy = y * this.h;
+        return this;
+    };
+
+    Sprite.prototype.verticalMirror = function(mirror){
+        this.mirrory = mirror;
+    };
+
+    Sprite.prototype.horizontalMirror = function(mirror){
+        this.mirrorx = mirror;
+    }
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Uniform Sprite
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    var UniformSprite = Smila.UniformSprite = function(canvas, options){
+        if (!isDefined(options)) throw logStr("Uniform Sprite needs options");
+        if (!isDefined(options.w)) throw logStr("Uniform Sprite needs width option");
+        if (!isDefined(options.h)) throw logStr("Uniform Sprite needs height option");
+        Sprite.call(this,canvas,options);
+    };
+
+    UniformSprite.prototype = Object.create(Sprite.prototype);
+
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Camera
@@ -299,7 +378,6 @@ window.Smila = function () {
     // DataStore
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
     var spriteCache = {};
 
     var DataStore = Smila.DataStore = {
@@ -324,12 +402,12 @@ window.Smila = function () {
                            callback();
                        }
                    }, function(){
-                       throw "Cannot load url: " + element.src;
+                       throw logStr("Cannot load url: " + element.src);
                    })
                 });
             } else {
                 loadSprite(spriteData, callback, function(){
-                    throw "Cannot load url: " + spriteData.src;
+                    throw logStr("Cannot load url: " + spriteData.src);
                 });
             }
         },
@@ -337,6 +415,16 @@ window.Smila = function () {
         get : function(key, options){
             if (key in spriteCache) {
                 return new Sprite(spriteCache[key], options);
+            } else {
+                throw logStr("Could not find key {" + key + "}");
+            }
+        },
+
+        getUniform: function(key, options){
+            if (key in spriteCache) {
+                return new UniformSprite(spriteCache[key], options);
+            } else {
+                throw logStr("Could not find key {" + key + "}");
             }
         }
     };
