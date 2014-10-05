@@ -68,6 +68,7 @@ window.Smila = function () {
         this.lastTime = -1;
         this.thread = -1;
         this.sortThread = -1;
+        this.onUpdate = null;
         parent.appendChild(canvas);
 
         if ("trackMouse" in options && options.trackMouse) {
@@ -78,6 +79,8 @@ window.Smila = function () {
                 self.mousePosition.y = evt.clientY - rect.top;
             };
         }
+
+        this._camera = new Camera(this);
 
         // start
         startUpdate(this);
@@ -100,6 +103,24 @@ window.Smila = function () {
             var dt = elapsed / EXPECTED_ELAPSED_MILLIS;
             var context = renderer.context;
             var renderItems = renderer.renderItems;
+            var camera = renderer.camera();
+
+            var cameraRealX = camera.real.x;
+            var cameraRealY = camera.real.y;
+            var clearRect_w = renderer.dimension.w + 20;
+            var clearRect_h = renderer.dimension.h + 20;
+            var clearX = cameraRealX - 10;
+            var clearY = cameraRealY - 10;
+            var rightOutherBound = cameraRealX + renderer.dimension.w;
+            var bottomBound = cameraRealY + renderer.dimension.h;
+
+            context.clearRect(clearX, clearY, clearRect_w, clearRect_h);
+
+            camera.render(context);
+
+            if (renderer.onUpdate !== null) {
+                renderer.onUpdate.call(this, dt, elapsed);
+            }
 
             for(var i = 0; i < renderItems.length; i+=1){
                 var d = renderItems[i];
@@ -135,6 +156,10 @@ window.Smila = function () {
         };
         renderer.sortThread = setTimeout(sort, 250);
     };
+
+    Renderer.prototype.camera = function(){
+        return this._camera;
+    }
 
     /**
      * stops the update process completely
@@ -218,6 +243,39 @@ window.Smila = function () {
         context.translate(-x, -y);
     };
 
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Camera
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    var Camera = Smila.Camera = function(renderer){
+        this.offset = {x:0,y:0};
+        this.real = {x:0,y:0};
+        this.renderer = renderer;
+    };
+
+    Camera.prototype.translate = function(offsetX, offsetY){
+        this.offset.x = offsetX;
+        this.offset.y = offsetY;
+        if (offsetX === 0 && offsetY === 0){
+            this.real.x = Math.round(this.real.x);
+            this.real.y = Math.round(this.real.y);
+        } else {
+            this.real.x -= offsetX;
+            this.real.y -= offsetY;
+        }
+    };
+
+    Camera.prototype.render = function(context){
+        context.translate(this.offset.x, this.offset.y);
+    };
+
+    Camera.prototype.set = function(x,y){
+        var transX = this.real.x - x;
+        var transY = this.real.y - y;
+        this.translate(transX, transY);
+        this.render(this.renderer.context);
+        this.translate(0,0);
+    };
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // DataStore

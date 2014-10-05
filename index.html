@@ -12,11 +12,18 @@
 
 <div>
     <div id="smila" style="width: 300px;height: 300px;"></div>
+    <div id="dpad"></div>
 </div>
 
 </body>
 <script>
     $(function(){
+
+        var UP = TouchController.DPad.UP;
+        var DOWN = TouchController.DPad.DOWN;
+        var LEFT = TouchController.DPad.LEFT;
+        var RIGHT = TouchController.DPad.RIGHT;
+        var dpad = new TouchController.DPad("dpad", {WASDEvents:true, bottom: 10, left: 10});
 
         var renderer = new Smila.Renderer("smila", {
             trackMouse: true
@@ -36,6 +43,26 @@
 
                 renderer.add(a);
 
+                renderer.onUpdate = function(dt, elapsed){
+                    var offsetY = 0, offsetX = 0;
+                    var dir = dpad.getDirection();
+                    switch (dir){
+                        case UP:
+                            offsetY += 0.8 * dt;
+                            break;
+                        case DOWN:
+                            offsetY -= 0.8 * dt;
+                            break;
+                        case RIGHT:
+                            offsetX -= 0.8 * dt;
+                            break;
+                        case LEFT:
+                            offsetX += 0.8 * dt;
+                            break;
+                    }
+
+                    renderer.camera().translate(offsetX, offsetY);
+                }
 
         });
 

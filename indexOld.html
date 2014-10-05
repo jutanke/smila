@@ -149,16 +149,16 @@
                     var offsetX = 0;
                     var dir = dpad.getDirection();
                     if (dir === UP) {
-                        offsetY += 0.2 * dt;
+                        offsetY += 0.8 * dt;
                     }
                     if (dir === DOWN) {
-                        offsetY -= 0.2 * dt;
+                        offsetY -= 0.8 * dt;
                     }
                     if (dir === RIGHT) {
-                        offsetX -= 0.2 * dt;
+                        offsetX -= 0.8 * dt;
                     }
                     if (dir === LEFT) {
-                        offsetX += 0.2 * dt;
+                        offsetX += 0.8 * dt;
                     }
 
                     Smila.Renderer.camera().translate(offsetX, offsetY);
