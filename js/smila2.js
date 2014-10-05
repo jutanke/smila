@@ -201,6 +201,8 @@ window.Smila = function () {
         this.img = canvas;
         this.w = isDefined(options.h) ? options.h : canvas.height;
         this.h = isDefined(options.w) ? options.w : canvas.width;
+        this.w_2 = Math.floor(this.w / 2);
+        this.h_2 = Math.floor(this.h / 2);
         this.ox = 0 | 0;
         this.oy = 0 | 0;
         this.zIndexByYPos = isDefined(options.zIndexByYPos) ?
@@ -209,24 +211,40 @@ window.Smila = function () {
         this.y = 0 | 0;
         this.z = 0| 0;
         this.angleInRadians = 0;
+        this.tl_x = this.x - this.w_2; // TOP-LEFT-X
+        this.tl_y = this.y - this.h_2; // TOP-LEFT-Y
         this.mirror = false;
     };
 
     /**
-     * Position on the Renderer
+     * Position on the Renderer.
+     * X-Y are the center position of the sprite
      * @param x
      * @param y
      * @returns {*}
      */
-    Sprite.prototype.position = function(x,y){
+    Sprite.prototype.positionCenter = function(x,y){
         if (arguments.length > 0) {
             this.x = x;
             this.y = y;
+            this.tl_x = x - this.w_2;
+            this.tl_y = y - this.h_2;
             return this;
         } else {
             return {x : this.x, y : this.y};
         }
     };
+
+    Sprite.prototype.position = function(x,y){
+        if (arguments.length > 0){
+            this.tl_x = x;
+            this.tl_y = y;
+            this.x = x + this.w_2;
+            this.y = y + this.h_2;
+        } else {
+            return {x: this.tl_x, y: this.tl_y};
+        }
+    }
 
     Sprite.prototype.render = function(context){
         var x = this.x;
