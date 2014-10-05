@@ -26,6 +26,17 @@
             {key:"character", src: "res/img/character.png"},
             function(){
 
+                var a = Smila.DataStore.get("character", {w: 64, h:64});
+                a.x = 30;
+                a.y = 30;
+
+                setInterval(function(){
+                    a.angleInRadians += 0.1;
+                }, 250);
+
+                renderer.add(a);
+
+
         });
 
     });

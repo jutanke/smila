@@ -171,9 +171,53 @@ window.Smila = function () {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-    var Sprite = Smila.Sprite = function(){
-
+    var Sprite = Smila.Sprite = function(canvas, options){
+        if (!isDefined(options)) options = {};
+        this.img = canvas;
+        this.w = isDefined(options.h) ? options.h : canvas.height;
+        this.h = isDefined(options.w) ? options.w : canvas.width;
+        this.ox = 0 | 0;
+        this.oy = 0 | 0;
+        this.zIndexByYPos = isDefined(options.zIndexByYPos) ?
+            options.zIndexByYPos : false;
+        this.x = 0 | 0;
+        this.y = 0 | 0;
+        this.z = 0| 0;
+        this.angleInRadians = 0;
+        this.mirror = false;
     };
+
+    /**
+     * Position on the Renderer
+     * @param x
+     * @param y
+     * @returns {*}
+     */
+    Sprite.prototype.position = function(x,y){
+        if (arguments.length > 0) {
+            this.x = x;
+            this.y = y;
+            return this;
+        } else {
+            return {x : this.x, y : this.y};
+        }
+    };
+
+    Sprite.prototype.render = function(context){
+        var x = this.x;
+        var y = this.y;
+        var w = this.w;
+        var h = this.h;
+        var wh = (0.5 + w/2) << 0;
+        var hh = (0.5 + h/2) << 0;
+        context.translate(x,y);
+        if (this.mirror) context.scale(-1,1);
+        if (this.angleInRadians !== 0) context.rotate(this.angleInRadians);
+        context.drawImage(this.img,this.ox,this.oy,w,h,-wh,-hh,w,h);
+        if (this.angleInRadians !== 0) context.rotate(-this.angleInRadians);
+        context.translate(-x, -y);
+    };
+
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // DataStore
@@ -211,6 +255,12 @@ window.Smila = function () {
                 loadSprite(spriteData, callback, function(){
                     throw "Cannot load url: " + spriteData.src;
                 });
+            }
+        },
+
+        get : function(key, options){
+            if (key in spriteCache) {
+                return new Sprite(spriteCache[key], options);
             }
         }
     };
