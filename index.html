@@ -3,8 +3,31 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title></title>
+    <script src="libs/stats.js"></script>
+    <script src="libs/touchController.mini.js"></script>
+    <script src="js/smila2.js"></script>
+    <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
 </head>
 <body>
 
+<div>
+    <div id="smila" style="width: 300px;height: 300px;"></div>
+</div>
+
 </body>
+<script>
+    $(function(){
+
+        var renderer = new Smila.Renderer("smila", {
+            trackMouse: true
+        });
+
+        Smila.DataStore.put(
+            {key:"character", src: "res/img/character.png"},
+            function(){
+
+        });
+
+    });
+</script>
 </html>
