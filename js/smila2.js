@@ -59,6 +59,7 @@ window.Smila = function () {
         canvas.height = parent.clientHeight;
         canvas.width = parent.clientWidth;
         this.renderItems = [];
+        this.pkmnMap = null;
         this.mousePosition = {
             x: 0,
             y: 0
@@ -126,13 +127,31 @@ window.Smila = function () {
                 renderer.onUpdate.call(this, dt, elapsed);
             }
 
+            if (renderer.pkmnMap !== null){
+                renderer.pkmnMap.renderBackground(
+                    context,
+                    cameraRealX,
+                    cameraRealY,
+                    clearRect_w,
+                    clearRect_h
+                );
+            }
+
             for(var i = 0; i < renderItems.length; i+=1){
                 var d = renderItems[i];
                 if (d.update){
                     d.update(dt, elapsed);
                 }
                 // check, if in frame!
-                d.render(context);
+                if ((d.x + d.w) >= cameraRealX && d.x <= rightOutherBound) {
+                    if ((d.y + d.h) >= cameraRealY && d.y <= bottomBound) {
+                        d.render(context);
+                    }
+                }
+            }
+
+            if (renderer.pkmnMap !== null){
+                renderer.pkmnMap.renderTopLayer(context);
             }
 
             if (!renderer._ispaused){
