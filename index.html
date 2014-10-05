@@ -52,38 +52,25 @@
                 a.subimage(2,3);
                 a.horizontalMirror(true);
 
-                setInterval(function(){
-                    a.angleInRadians += 0.1;
-                }, 250);
 
-                var b = Smila.DataStore.getUniform("character", {w: 64, h:64});
-                b.position(70,80);
-                b.verticalMirror(true);
+                var b = Smila.DataStore.getEntity("character", {
+                    w:64, h:64, animations : {
+                        dance : {
+                            animationType : Smila.Animation.Type.BOUNCE,
+                            frames : [
+                                {ux: 1, uy: 1, time: 250},
+                                {ux: 1, uy: 0, time: 250},
+                                {ux: 1, uy: 2, time: 250}
+                            ]
+                        }
+                    }
+                });
 
-                var c = Smila.DataStore.getUniform("character", {w: 64, h:64});
-                c.position(130,5);
-                c.horizontalMirror(true);
-                var d = Smila.DataStore.getUniform("character", {w: 64, h:64});
-                d.position(130,80);
-
-
-                var e = Smila.DataStore.getAnimation("attacks", {animations: [
-                        {ox: 2200, oy: 0, w:100, h:54, time:100},
-                        {ox: 2220, oy: 10, w:200, h:154, time:100},
-                        {ox: 2240, oy: 10, w:56, h:64, time:500},
-                        {ox: 2260, oy: 10, w:100, h:54, time:100}
-                    ],
-                    animationType: Smila.Animation.Type.BOUNCE}
-                );
-                e.play();
-
-                e.position(0,0);
+                b.position(64,0);
+                b.animate("dance");
 
                 renderer.add(a);
                 renderer.add(b);
-                renderer.add(c);
-                renderer.add(d);
-                renderer.add(e);
 
                 renderer.onUpdate = function(dt, elapsed){
                     var offsetY = 0, offsetX = 0;
@@ -102,10 +89,8 @@
                             offsetX += 0.8 * dt;
                             break;
                     }
-
                     renderer.camera().translate(offsetX, offsetY);
                 }
-
         });
 
     });

@@ -338,17 +338,17 @@ window.Smila = function () {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     function ONCE_UPDATE() {
-        if (this.pointer < this.animations.length - 1) this.pointer += 1;
+        if (this.pointer < this.frames.length - 1) this.pointer += 1;
     };
 
     function ENDLESS_UPDATE() {
-        if (this.pointer < (this.animations.length - 1)) this.pointer += 1;
+        if (this.pointer < (this.frames.length - 1)) this.pointer += 1;
         else this.pointer = 0;
     };
 
     function BOUNCE_UPDATE() {
         if (this.pointer == 0) this.forward = true;
-        else if (this.pointer === (this.animations.length - 1)) this.forward = false;
+        else if (this.pointer === (this.frames.length - 1)) this.forward = false;
         if (this.forward) this.pointer += 1;
         else this.pointer -= 1;
     };
@@ -365,15 +365,15 @@ window.Smila = function () {
      */
     var Animation = Smila.Animation = function(canvas, options){
         if (!isDefined(options)) throw logStr("Animation needs options");
-        if (!isDefined(options.animations)) throw logStr("Animation needs animations");
-        options.w = options.animations[0].w;
-        options.h = options.animations[0].h;
+        if (!isDefined(options.frames)) throw logStr("Animation needs frames");
+        options.w = options.frames[0].w;
+        options.h = options.frames[0].h;
         Sprite.call(this,canvas,options);
         this.forward = true;
         this.elapsedTime = 0;
         this.isStoped = true;
         this.pointer = 0;
-        this.animations = options.animations;
+        this.frames = options.frames;
         var type = isDefined(options.animationType) ?
             options.animationType : Animation.Type.ONCE;
         switch (type){
@@ -408,15 +408,15 @@ window.Smila = function () {
 
     Animation.prototype.update = function(dt, elapsed){
         if (!this.isStoped){
-            if (this.animations.length === 1){
+            if (this.frames.length === 1){
                 this.directImage(
-                    this.animations[0].ox,
-                    this.animations[0].oy,
-                    this.animations[0].w,
-                    this.animations[0].h
+                    this.frames[0].ox,
+                    this.frames[0].oy,
+                    this.frames[0].w,
+                    this.frames[0].h
                 );
             } else {
-                var current = this.animations[this.pointer];
+                var current = this.frames[this.pointer];
                 this.width(current.w);
                 this.height(current.h);
                 this.directImage(current.ox, current.oy, current.w, current.h);
@@ -449,15 +449,60 @@ window.Smila = function () {
     UniformSprite.prototype = Object.create(Sprite.prototype);
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    // Uniform Animation
+    // Entity
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    var UniformAnimation = Smila.UniformAnimation = function(canvas, options){
-        // Check needed data
+    var Entity = Smila.Entity = function(canvas, options){
+        if (!isDefined(options)) throw logStr("Entity needs options");
+        if (!isDefined(options.animations)) throw logStr("Entity needs animations");
+        this.frames = [];
+        this.pointer = 0;
+        this.elapsedTime = 0;
+        this.currentState = "";
+        this.animations = options.animations;
+        this.subupdate = function(){};
         UniformSprite.call(this, canvas, options);
     };
 
-    UniformAnimation.prototype = Object.create(UniformSprite.prototype);
+    Entity.prototype = Object.create(UniformSprite.prototype);
+
+    Entity.prototype.animate = function (key) {
+        if (key === this.currentState) return;
+        var anim = this.animations[key];
+        if (anim) {
+            this.currentState = key;
+            this.pointer = 0;
+            this.frames = anim.frames;
+            switch (anim.animationType) {
+                case Animation.Type.BOUNCE:
+                    this.subupdate = BOUNCE_UPDATE;
+                    break;
+                case Animation.Type.ENDLESS:
+                    this.subupdate = ENDLESS_UPDATE;
+                    break;
+                case Animation.Type.ONCE:
+                    this.subupdate = ONCE_UPDATE;
+                    break;
+            }
+        }
+        return this;
+    };
+
+    Entity.prototype.update = function(dt, elapsed){
+        var frames = this.frames;
+        if (frames.length === 0) return;
+        if (frames.length === 1) {
+            this.subimage(frames[0].ux, frames[0].uy);
+        } else {
+            var current = frames[this.pointer];
+            this.subimage(current.ux, current.uy);
+            if (this.elapsedTime >= current.time) {
+                this.elapsedTime = 0;
+                this.subupdate();
+            }
+            this.elapsedTime += elapsed;
+        }
+    };
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Camera
@@ -550,6 +595,14 @@ window.Smila = function () {
         getUniform: function(key, options){
             if (key in spriteCache) {
                 return new UniformSprite(spriteCache[key], options);
+            } else {
+                throw logStr("Could not find key {" + key + "}");
+            }
+        },
+
+        getEntity: function(key, options){
+            if (key in spriteCache) {
+                return new Entity(spriteCache[key], options);
             } else {
                 throw logStr("Could not find key {" + key + "}");
             }
