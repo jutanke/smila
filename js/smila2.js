@@ -366,6 +366,8 @@ window.Smila = function () {
     var Animation = Smila.Animation = function(canvas, options){
         if (!isDefined(options)) throw logStr("Animation needs options");
         if (!isDefined(options.animations)) throw logStr("Animation needs animations");
+        options.w = options.animations[0].w;
+        options.h = options.animations[0].h;
         Sprite.call(this,canvas,options);
         this.forward = true;
         this.elapsedTime = 0;

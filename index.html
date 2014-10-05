@@ -68,16 +68,16 @@
 
 
                 var e = Smila.DataStore.getAnimation("attacks", {animations: [
-                        {ox: 2200, oy: 10, w:100, h:54, time:100},
-                        {ox: 2220, oy: 10, w:100, h:54, time:100},
-                        {ox: 2240, oy: 10, w:100, h:54, time:500},
+                        {ox: 2200, oy: 0, w:100, h:54, time:100},
+                        {ox: 2220, oy: 10, w:200, h:154, time:100},
+                        {ox: 2240, oy: 10, w:56, h:64, time:500},
                         {ox: 2260, oy: 10, w:100, h:54, time:100}
                     ],
                     animationType: Smila.Animation.Type.BOUNCE}
                 );
                 e.play();
 
-                e.positionCenter(100,100);
+                e.position(0,0);
 
                 renderer.add(a);
                 renderer.add(b);
