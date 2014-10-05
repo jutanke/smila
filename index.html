@@ -41,7 +41,10 @@
         });
 
         Smila.DataStore.put(
-            {key:"character", src: "res/img/character.png"},
+            [
+                {key:"character", src: "res/img/character.png"},
+                {key:"attacks", src: "res/img/txtpack_reduced.png"}
+            ],
             function(){
 
                 var a = Smila.DataStore.getUniform("character", {w: 64, h:64});
@@ -63,11 +66,24 @@
                 var d = Smila.DataStore.getUniform("character", {w: 64, h:64});
                 d.position(130,80);
 
+
+                var e = Smila.DataStore.getAnimation("attacks", {animations: [
+                        {ox: 2200, oy: 10, w:100, h:54, time:100},
+                        {ox: 2220, oy: 10, w:100, h:54, time:100},
+                        {ox: 2240, oy: 10, w:100, h:54, time:500},
+                        {ox: 2260, oy: 10, w:100, h:54, time:100}
+                    ],
+                    animationType: Smila.Animation.Type.BOUNCE}
+                );
+                e.play();
+
+                e.positionCenter(100,100);
+
                 renderer.add(a);
                 renderer.add(b);
                 renderer.add(c);
                 renderer.add(d);
-                console.log(renderer.renderItems);
+                renderer.add(e);
 
                 renderer.onUpdate = function(dt, elapsed){
                     var offsetY = 0, offsetX = 0;

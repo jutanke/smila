@@ -318,13 +318,118 @@ window.Smila = function () {
         return this;
     };
 
+    Sprite.prototype.directImage = function(ox,oy, w,h){
+        this.ox = ox;
+        this.oy = oy;
+        this.width(w);
+        this.height(h);
+    };
+
     Sprite.prototype.verticalMirror = function(mirror){
         this.mirrory = mirror;
     };
 
     Sprite.prototype.horizontalMirror = function(mirror){
         this.mirrorx = mirror;
-    }
+    };
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Animation
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    function ONCE_UPDATE() {
+        if (this.pointer < this.animations.length - 1) this.pointer += 1;
+    };
+
+    function ENDLESS_UPDATE() {
+        if (this.pointer < (this.animations.length - 1)) this.pointer += 1;
+        else this.pointer = 0;
+    };
+
+    function BOUNCE_UPDATE() {
+        if (this.pointer == 0) this.forward = true;
+        else if (this.pointer === (this.animations.length - 1)) this.forward = false;
+        if (this.forward) this.pointer += 1;
+        else this.pointer -= 1;
+    };
+
+    /**
+     * options: {
+     *      animations: [
+     *          {ox:33, oy:100, w:32, h:32, time:1000},
+     *          {ox:133, oy:10, w:32, h:64, time:322}
+     *      ],
+     *      animationType: Smila.Animation.Type.BOUNCE
+     * }
+     * @type {Animation}
+     */
+    var Animation = Smila.Animation = function(canvas, options){
+        if (!isDefined(options)) throw logStr("Animation needs options");
+        if (!isDefined(options.animations)) throw logStr("Animation needs animations");
+        Sprite.call(this,canvas,options);
+        this.forward = true;
+        this.elapsedTime = 0;
+        this.isStoped = true;
+        this.pointer = 0;
+        this.animations = options.animations;
+        var type = isDefined(options.animationType) ?
+            options.animationType : Animation.Type.ONCE;
+        switch (type){
+            case Animation.Type.BOUNCE:
+                this.subupdate = BOUNCE_UPDATE;
+                break;
+            case Animation.Type.ENDLESS:
+                this.subupdate = ENDLESS_UPDATE;
+                break;
+            case Animation.Type.ONCE:
+                this.subupdate = ONCE_UPDATE;
+                break;
+        }
+    };
+    Animation.prototype = Object.create(Sprite.prototype);
+
+    Animation.prototype.play = function(){
+        this.isStoped = false;
+        return this;
+    };
+
+    Animation.prototype.pause = function () {
+        this.isStoped = true;
+        return this;
+    };
+
+    Animation.prototype.reset = function () {
+        this.isStoped = true;
+        this.pointer = 0;
+        return this;
+    };
+
+    Animation.prototype.update = function(dt, elapsed){
+        if (!this.isStoped){
+            if (this.animations.length === 1){
+                this.directImage(
+                    this.animations[0].ox,
+                    this.animations[0].oy,
+                    this.animations[0].w,
+                    this.animations[0].h
+                );
+            } else {
+                var current = this.animations[this.pointer];
+                this.directImage(current.ox, current.oy, current.w, current.h);
+                if (this.elapsedTime >= current.time) {
+                    this.elapsedTime = 0;
+                    this.subupdate();
+                }
+                this.elapsedTime += elapsed;
+            }
+        }
+    };
+
+    Animation.Type = {
+        BOUNCE:0,
+        ONCE:1,
+        ENDLESS:2
+    };
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Uniform Sprite
@@ -339,6 +444,16 @@ window.Smila = function () {
 
     UniformSprite.prototype = Object.create(Sprite.prototype);
 
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Uniform Animation
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    var UniformAnimation = Smila.UniformAnimation = function(canvas, options){
+        // Check needed data
+        UniformSprite.call(this, canvas, options);
+    };
+
+    UniformAnimation.prototype = Object.create(UniformSprite.prototype);
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Camera
@@ -415,6 +530,14 @@ window.Smila = function () {
         get : function(key, options){
             if (key in spriteCache) {
                 return new Sprite(spriteCache[key], options);
+            } else {
+                throw logStr("Could not find key {" + key + "}");
+            }
+        },
+
+        getAnimation : function(key, options){
+            if (key in spriteCache) {
+                return new Animation(spriteCache[key], options);
             } else {
                 throw logStr("Could not find key {" + key + "}");
             }
