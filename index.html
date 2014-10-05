@@ -46,54 +46,69 @@
             [
                 {key:"character", src: "res/img/character.png"},
                 {key:"attacks", src: "res/img/txtpack_reduced.png"}
-            ],
-            function(){
+            ], testReady
+        );
 
-                var a = Smila.DataStore.getUniform("character", {w: 64, h:64});
-                a.position(0,0);
-                a.subimage(2,3);
-                a.horizontalMirror(true);
+        Smila.MapLoader.put({
+            key: "map1", src: "res/maps/test_map_01.json", imgFolder:"res/img"
+        }, testReady);
+
+        var c = 0;
+        function testReady(){
+            c += 1;
+            if (c === 2) {
+                onReady();
+            }
+
+        };
+
+        function onReady(){
+
+            var a = Smila.DataStore.getUniform("character", {w: 64, h:64});
+            a.position(0,0);
+            a.subimage(2,3);
+            a.horizontalMirror(true);
 
 
-                var b = Smila.DataStore.getEntity("character", {
-                    w:64, h:64, animations : {
-                        dance : {
-                            animationType : Smila.Animation.Type.BOUNCE,
-                            frames : [
-                                {ux: 1, uy: 1, time: 250},
-                                {ux: 1, uy: 0, time: 250},
-                                {ux: 1, uy: 2, time: 250}
-                            ]
-                        }
+            var b = Smila.DataStore.getEntity("character", {
+                w:64, h:64, animations : {
+                    dance : {
+                        animationType : Smila.Animation.Type.BOUNCE,
+                        frames : [
+                            {ux: 1, uy: 1, time: 250},
+                            {ux: 1, uy: 0, time: 250},
+                            {ux: 1, uy: 2, time: 250}
+                        ]
                     }
-                });
-
-                b.position(64,0);
-                b.animate("dance");
-
-                renderer.add(a);
-                renderer.add(b);
-
-                renderer.onUpdate = function(dt, elapsed){
-                    var offsetY = 0, offsetX = 0;
-                    var dir = dpad.getDirection();
-                    switch (dir){
-                        case UP:
-                            offsetY += 0.8 * dt;
-                            break;
-                        case DOWN:
-                            offsetY -= 0.8 * dt;
-                            break;
-                        case RIGHT:
-                            offsetX -= 0.8 * dt;
-                            break;
-                        case LEFT:
-                            offsetX += 0.8 * dt;
-                            break;
-                    }
-                    renderer.camera().translate(offsetX, offsetY);
                 }
-        });
+            });
+
+            b.position(64,0);
+            b.animate("dance");
+
+            renderer.add(a);
+            renderer.add(b);
+
+            renderer.onUpdate = function(dt, elapsed){
+                var offsetY = 0, offsetX = 0;
+                var dir = dpad.getDirection();
+                switch (dir){
+                    case UP:
+                        offsetY += 0.8 * dt;
+                        break;
+                    case DOWN:
+                        offsetY -= 0.8 * dt;
+                        break;
+                    case RIGHT:
+                        offsetX -= 0.8 * dt;
+                        break;
+                    case LEFT:
+                        offsetX += 0.8 * dt;
+                        break;
+                }
+                renderer.camera().translate(offsetX, offsetY);
+            }
+        }
 
     });
 </script>

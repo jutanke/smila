@@ -32,7 +32,11 @@ window.Smila = function () {
         return typeof obj !== 'undefined';
     }
 
-    var Smila = {};
+    var Smila = {
+        log : log,
+        isDefined : isDefined,
+        logStr : logStr
+    };
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Renderer
