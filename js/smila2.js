@@ -415,6 +415,8 @@ window.Smila = function () {
                 );
             } else {
                 var current = this.animations[this.pointer];
+                this.width(current.w);
+                this.height(current.h);
                 this.directImage(current.ox, current.oy, current.w, current.h);
                 if (this.elapsedTime >= current.time) {
                     this.elapsedTime = 0;
