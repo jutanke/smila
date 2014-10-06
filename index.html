@@ -13,6 +13,7 @@
         * {
             padding: 0;
             margin: 0;
+            background-color: black;
         }
         #smila {
             margin-left: auto;
@@ -85,27 +86,29 @@
                 }
             });
 
-            b.position(64,0);
+            b.position(175,320);
             b.animate("dance");
 
             renderer.add(a);
             renderer.add(b);
+
+            renderer.camera().set(100,120);
 
             renderer.onUpdate = function(dt, elapsed){
                 var offsetY = 0, offsetX = 0;
                 var dir = dpad.getDirection();
                 switch (dir){
                     case UP:
-                        offsetY += 0.8 * dt;
+                        offsetY += 1.8 * dt;
                         break;
                     case DOWN:
-                        offsetY -= 0.8 * dt;
+                        offsetY -= 1.8 * dt;
                         break;
                     case RIGHT:
-                        offsetX -= 0.8 * dt;
+                        offsetX -= 1.8 * dt;
                         break;
                     case LEFT:
-                        offsetX += 0.8 * dt;
+                        offsetX += 1.8 * dt;
                         break;
                 }
                 renderer.camera().translate(offsetX, offsetY);
