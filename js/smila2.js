@@ -38,6 +38,8 @@ Smila = function () {
     // Renderer
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    var stats = null;
+
     var EXPECTED_ELAPSED_MILLIS = Math.floor(1000 / 60);
     /**
      *
@@ -85,6 +87,15 @@ Smila = function () {
             w: parent.clientWidth,
             h: parent.clientHeight
         };
+
+        if (VERBOSE && isDefined(Stats)){
+            stats = new Stats();
+            stats.domElement.style.position = 'absolute';
+            stats.domElement.style.left = '0px';
+            stats.domElement.style.top = '0px';
+            document.body.appendChild( stats.domElement );
+        }
+
         this.context = canvas.getContext('2d');
         this._ispaused = false;
         this.lastTime = -1;
@@ -117,6 +128,7 @@ Smila = function () {
     function startUpdate(renderer) {
 
         function update(){
+            if (stats !== null) stats.begin();
             var now = Date.now(); // afaik faster than performance.now
             var elapsed = 0;
             if (renderer.lastTime !== -1){
@@ -172,6 +184,7 @@ Smila = function () {
                 renderer.pkmnMap.renderTopLayer(context);
             }
 
+            if (stats !== null) stats.end();
             if (!renderer._ispaused){
                 renderer.thread = requestAnimationFrame(update);
             }

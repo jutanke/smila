@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <script src="libs/stats.js"></script>
+    <script src="libs/stats2.js"></script>
     <script src="libs/touchController.mini.js"></script>
     <script src="js/smila2.js"></script>
     <script src="js/smila2_pkmnMap.js"></script>
@@ -64,13 +64,13 @@
         function onReady(){
 
             renderer.loading(false);
-            renderer.putPkmnMap(Smila.MapLoader.get("map1"));
+            var map = Smila.MapLoader.get("map1");
+            renderer.putPkmnMap(map);
 
             var a = Smila.DataStore.getUniform("character", {w: 64, h:64});
             a.position(0,0);
             a.subimage(2,3);
             a.horizontalMirror(true);
-
 
             var b = Smila.DataStore.getEntity("character", {
                 w:64, h:64, animations : {
