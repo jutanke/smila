@@ -14,11 +14,9 @@
             padding: 0;
             margin: 0;
         }
-        canvas {
-            border: 1px solid black;
+        #smila {
             margin-left: auto;
             margin-right: auto;
-            position: absolute;
         }
     </style>
 </head>
@@ -41,6 +39,7 @@
         var renderer = new Smila.Renderer("smila", {
             trackMouse: true
         });
+        renderer.loading(true);
 
         Smila.DataStore.put(
             [
@@ -63,6 +62,8 @@
         };
 
         function onReady(){
+
+            renderer.loading(false);
 
             var a = Smila.DataStore.getUniform("character", {w: 64, h:64});
             a.position(0,0);

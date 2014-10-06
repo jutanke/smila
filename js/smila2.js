@@ -59,15 +59,32 @@ window.Smila = function () {
             options = {};
         }
         var parent = document.getElementById(domId);
+        var position = parent.style.position;
+        if (position.length === 0) {
+            parent.style.position = "relative";
+        }
+        this.loadingId = domId + "loading";
+        var loadingScreen = document.createElement('div');
+        loadingScreen.innerHTML ="loading..";
+        loadingScreen.style.fontFamily = "monospace";
+        loadingScreen.style.color = "white";
+        loadingScreen.id = this.loadingId;
+        loadingScreen.style.backgroundColor = "cornflowerblue";
+        loadingScreen.style.position = "relative";
+        loadingScreen.style.marginTop = "-" + (parent.clientHeight + 4) + "px";
+        loadingScreen.style.display = "none";
+        loadingScreen.style.width = "100%";
+        loadingScreen.style.height = "100%";
         var canvas = document.createElement('canvas');
         canvas.height = parent.clientHeight;
         canvas.width = parent.clientWidth;
         this.renderItems = [];
         this.pkmnMap = null;
+        this.isLoading = false;
         this.mousePosition = {
             x: 0,
             y: 0
-        }
+        };
         this.dimension = {
             w: parent.clientWidth,
             h: parent.clientHeight
@@ -79,6 +96,7 @@ window.Smila = function () {
         this.sortThread = -1;
         this.onUpdate = null;
         parent.appendChild(canvas);
+        parent.appendChild(loadingScreen);
 
         if ("trackMouse" in options && options.trackMouse) {
             var self = this;
@@ -187,7 +205,23 @@ window.Smila = function () {
 
     Renderer.prototype.camera = function(){
         return this._camera;
-    }
+    };
+
+    /**
+     * creates a loading screen
+     * @param loading
+     */
+    Renderer.prototype.loading = function(loading){
+        if (this.isLoading !== loading) {
+            this.isLoading = loading;
+            var l = document.getElementById(this.loadingId);
+            if (loading) {
+                l.style.display = "block";
+            } else {
+                l.style.display = "none";
+            }
+        }
+    };
 
     /**
      * stops the update process completely
