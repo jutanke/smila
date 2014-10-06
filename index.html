@@ -91,6 +91,24 @@
             renderer.add(a);
             renderer.add(b);
 
+            var q;
+            for (var i = 0; i < 10000; i++) {
+                q = Smila.DataStore.getEntity("character", {
+                    w:64, h:64, animations : {
+                        dance : {
+                            animationType : Smila.Animation.Type.BOUNCE,
+                            frames : [
+                                {ux: 1, uy: 1, time: 250},
+                                {ux: 1, uy: 0, time: 250},
+                                {ux: 1, uy: 2, time: 250}
+                            ]
+                        }
+                    }
+                });
+                q.position(getRandomInt(100, 2500),getRandomInt(100, 2500));
+                renderer.add(q);
+            }
+
             renderer.camera().set(100,120);
 
             renderer.onUpdate = function(dt, elapsed){
@@ -115,5 +133,13 @@
         }
 
     });
+
+    /**
+     * Returns a random integer between min and max
+     * Using Math.round() will give you a non-uniform distribution!
+     */
+    function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
 </script>
 </html>
