@@ -50,7 +50,7 @@
         );
 
         Smila.MapLoader.put({
-            key: "map1", src: "res/maps/test_map_01.json", imgFolder:"res/img"
+            key: "map1", src: "res/maps/test_map_01.json", imgFolder:"res/img/"
         }, testReady);
 
         var c = 0;
@@ -61,10 +61,10 @@
             }
         };
 
-
         function onReady(){
 
             renderer.loading(false);
+            renderer.putPkmnMap(Smila.MapLoader.get("map1"));
 
             var a = Smila.DataStore.getUniform("character", {w: 64, h:64});
             a.position(0,0);

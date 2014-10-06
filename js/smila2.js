@@ -228,6 +228,10 @@ Smila = function () {
         clearTimeout(this.sortThread);
     };
 
+    Renderer.prototype.putPkmnMap = function(map){
+        this.pkmnMap = map;
+    };
+
     /**
      * resumes the previously paused update process
      */
@@ -637,6 +641,14 @@ Smila = function () {
             }
         },
 
+        _get_raw_ : function(key){
+            if (key in spriteCache) {
+                return spriteCache[key];
+            } else {
+                throw logStr("Could not find key {" + key + "}");
+            }
+        },
+
         getAnimation : function(key, options){
             if (key in spriteCache) {
                 return new Animation(spriteCache[key], options);
@@ -680,11 +692,12 @@ Smila = function () {
         };
         img.onerror = function(){
             log("Could not load Sprite {" + spriteData.key + "}");
+            error.call(DataStore);
         }
 
         if (spriteData.key in spriteCache) {
             log("Load Sprite " + spriteData.key +" from Cache");
-            callback.call(DataStore);
+            setTimeout(callback, 1);
         } else if (typeof spriteData.base64 !== "undefined") {
             log("Load Sprite " + spriteData.key +" from base64");
             img.src = spriteData.base64;

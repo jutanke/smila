@@ -24,6 +24,7 @@
         UniformSprite.call(this, canvas, options);
         this.firstgid = options.firstgid;
         this.tileSetWidth = canvas.width / options.w;
+        this.options = options;
     };
     TileSet.prototype = Object.create(UniformSprite.prototype);
 
@@ -46,9 +47,18 @@
         return false;
     };
 
+    /**
+     * Creates a sprite form the tileset that points to a specific
+     */
+    TileSet.prototype.splice = function(){
+        return new TileSet(this.img, this.options);
+    };
+
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Map
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    var MAP_TILE_SIZE = 50;
 
     /**
      * This is a Tiled-Map (http://www.mapeditor.org/)
@@ -70,25 +80,225 @@
      * | | | | |    *
      * @type {Function}
      */
-    var Map = Smila.Map = function(json, imgFolder){
-        this.tw = json.tilewidth;
-        this.th = json.tileheight;
+    var Map = Smila.Map = function(json, imgFolder, callback){
+        this.w = json.width;
+        this.h = json.height;
+        var ts = json.tilesets[0];
+        var tileSetOptions = {
+            w : json.tilewidth,
+            h : json.tileheight,
+            firstgid: ts.firstgid
+        };
+        this.sprites = [];
+        var self = this;
+        var key = ts.name;
+        Smila.DataStore.put({
+            src: imgFolder + ts.image.replace(/^.*[\\\/]/, ''),
+            key:key
+        }, function(){
+            self.tileset = new TileSet(Smila.DataStore._get_raw_(key), tileSetOptions);
+            _mapInit(self, json);
+            callback.call(self);
+        });
+
+        this.subtiles = [];     // Background
+        this.subtilesTop = [];    // Topground
+
+        this.currentX = 0;
+        this.currentY = 0;
+        this.currentLX = 1;
+        this.currentLY = 1;
+        this.tilewidth = json.tilewidth;
+        this.tileheight = json.tileheight;
+
         this.w = json.width;
         this.h = json.height;
 
-        // TODO: mach weiter hier:
-        var tileSetOptions = {
-            w : json.tilewidth,
-            h : json.tileheight
+        this.subtileWidth = MAP_TILE_SIZE * json.tilewidth;
+        this.subtileHeight = MAP_TILE_SIZE * json.tileheight;
 
+        var xSteps = Math.ceil((json.width * json.tilewidth) / this.subtileWidth);
+        var ySteps = Math.ceil((json.height * json.tileheight) / this.subtileHeight);
+
+        log("Map: create subs: " + xSteps + " x " + ySteps + "  {" + this.subtileWidth + " x " + this.subtileHeight + "} per Element");
+
+        for (var x = 0; x < xSteps; x++) {
+            this.subtiles[x] = [];
+            this.subtilesTop[x] = [];
+            for (var y = 0; y < ySteps; y++) {
+                var canvas = document.createElement("canvas");
+                canvas.width = this.subtileWidth;
+                canvas.height = this.subtileHeight;
+                this.subtiles[x][y] = canvas;
+                var canvast = document.createElement("canvas");
+                canvast.width = this.subtileWidth;
+                canvast.height = this.subtileHeight;
+                this.subtilesTop[x][y] = canvast;
+            }
+        };
+
+    };
+
+    /**
+     *
+     * @param map
+     * @param json
+     * @private
+     */
+    function _mapInit(map, json){
+        var bottom = json.layers[0];
+        var bottom2 = json.layers[1];
+        var top = json.layers[3];
+        var dyn = json.layers[2];
+        _mapLayerToCanvas([bottom,bottom2],map.subtiles, map.tileset,json.tilewidth, json.tileheight, json.width, map.subtileWidth,map.subtileHeight);
+        _mapLayerToCanvas(top,map.subtilesTop, map.tileset,json.tilewidth, json.tileheight, json.width, map.subtileWidth,map.subtileHeight);
+        map.sprites = _createSpritesFromDynamicLayer(dyn, map.tileset, json.width,json.tilewidth, json.tileheight);
+        log("Map: load dynamic sprites onto map: {" + map.sprites.length + "}");
+        if (json.layers.length > 4 && json.tilesets.length > 1){
+            var events = json.layers[4].data;
+            var eventFGID = (json.tilesets[1].firstgid) - 1;
+
+            // Key-Value-store with: x_y : { .. }, like: 10_4 : { name: "Jul" }
+            var eventDataLookup = {};
+            if (json.layers.length > 5){
+                var tileWidth = json.tilewidth;
+                var tileHeight = json.tileheight;
+                var objs = json.layers[5];
+                if(objs.type === "objectgroup"){
+                    for(var i = 0; i < objs.objects.length; i++){
+                        var current = objs.objects[i];
+                        var x = Math.floor(current.x / tileWidth);
+                        var y = Math.floor(current.y / tileHeight);
+                        eventDataLookup[x + "_" + y] = {
+                            name : current.name,
+                            properties : current.properties
+                        }
+                    }
+                }
+            }
+
+            map.eventLayer = [];
+            for(var x = 0; x < json.width; x++){
+                map.eventLayer[x] = [];
+                for (var y = 0; y < json.height; y++){
+                    var i = y * json.width + x;
+                    if (events[i] === 0) map.eventLayer[x][y] = 0;
+                    else{
+                        var key = x + "_" + y;
+                        var data = {};
+                        var value = events[i] - eventFGID;
+                        if (key in eventDataLookup){
+                            data = eventDataLookup[key];
+                        }
+                        map.eventLayer[x][y] = {
+                            id : events[i] - eventFGID,
+                            data : data
+                        };
+                    }
+                }
+            }
         }
+    };
 
-        for (var x = 0; x < json.width; x++) {
-            for(var y = 0; y < json.height; y++) {
+    Map.prototype.renderBackground = function (ctx, cameraX, cameraY, viewport_w, viewport_h) {
+        var x = Math.floor(cameraX / this.subtileWidth);
+        var y = Math.floor(cameraY / this.subtileHeight);
+        var rx = (x * this.subtileWidth) + (this.subtileWidth - (x % this.subtileWidth)) + viewport_w;
+        var by = (y * this.subtileHeight) + (this.subtileHeight - (y % this.subtileHeight)) + viewport_h;
+        var X = Math.ceil(rx / this.subtileWidth);
+        var Y = Math.ceil(by / this.subtileHeight);
+        if (x < 0) x = 0;
+        if (y < 0) y = 0;
+        if (x >= X) X = x + 1;
+        if (y >= Y) Y = y + 1;
+        X = Math.min(X, this.subtiles.length);
+        Y = Math.min(Y, this.subtiles[0].length);
+        this.currentX = x;
+        this.currentY = y;
+        this.currentLX = X;
+        this.currentLY = Y;
+        for (; x < X; x++) {
+            for (var ty = y; ty < Y; ty++) {
+                if (this.subtiles[x][ty] !== null) {
+                    ctx.drawImage(this.subtiles[x][ty], x * this.subtileWidth, ty * this.subtileHeight);
+                } else {
+                    console.log("null at " + x + "|" + ty);
+                }
 
             }
         }
+    };
 
+    Map.prototype.renderTopLayer = function(ctx){
+        // we calculated the positions for this round inside of the method "renderBackground" already,
+        // so we dont need to get them back!
+        var x = this.currentX;
+        var X = this.currentLX;
+        var Y = this.currentLY;
+        for(; x < X;x++){
+            for (var y = this.currentY; y < Y; y++){
+                if (this.subtilesTop[x][y] !== null) {
+                    ctx.drawImage(this.subtilesTop[x][y], x * this.subtileWidth, y * this.subtileHeight);
+                } else {
+                    console.log("null at " + x + "|" + y);
+                }
+            }
+        }
+    };
+
+    function _mapLayerToCanvas(layer,canvasMatrix, tileset, tilewidth, tileheight, width,subtileWidth,subtileHeight){
+        var sec = null; // currently only 2 extra layers are supported
+        if (Array.isArray(layer)){
+            sec = layer[1];
+            layer = layer[0];
+        }
+
+        for (var X = 0; X < canvasMatrix.length; X++) {
+            for (var Y = 0; Y < canvasMatrix[0].length; Y++) {
+                var ctx = canvasMatrix[X][Y].getContext("2d");
+                var ctxX = 0;
+                var ctxY = 0;
+                for (var x = X * subtileWidth; x < ((X + 1) * subtileWidth) - 1; x += tilewidth) {
+                    ctxY = 0;
+                    for (var y = Y * subtileHeight; y < ((Y + 1) * subtileHeight) - 1; y += tileheight) {
+                        var tx = x / tilewidth;
+                        var ty = y / tileheight;
+                        var i = ty * width + tx;
+                        if(i < layer.data.length){
+                            if (tx < width){
+                                tileset.position(ctxX,ctxY);
+                                if(tileset.setTile(layer.data[i])){
+                                    tileset.render(ctx);
+                                }
+                                if (sec !== null){
+                                    if (tileset.setTile(sec.data[i])){
+                                        tileset.render(ctx);
+                                    }
+                                }
+                            }
+                        }
+                        ctxY += tileheight;
+                    }
+                    ctxX += tilewidth;
+                }
+            }
+        }
+    };
+
+    function _createSpritesFromDynamicLayer(layer, tileset, width, tilewidth, tileheight){
+        var sprites = [];
+        for (var i = 0; i < layer.data.length;i++){
+            var j = layer.data[i];
+            if (j !== 0){
+                var ts = tileset.splice();
+                ts.setTile(j);
+                var y = (Math.floor(i / width)) * tileheight;
+                var x = (i % width) * tilewidth;
+                ts.position(x,y);
+                sprites.push(ts);
+            }
+        }
+        return sprites;
     };
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -107,9 +317,18 @@
                     if (typeof json === 'string' || json instanceof String) {
                         json = JSON.parse(json);
                     }
-                    mapCache[mapData.key] = new Map(json, mapData.imgFolder);
-                    callback.call(MapLoader);
+                    mapCache[mapData.key] = new Map(json, mapData.imgFolder, function(){
+                        callback.call(MapLoader);
+                    });
                 });
+            }
+        },
+
+        get : function(key){
+            if (key in mapCache) {
+                return mapCache[key];
+            } else {
+                throw logStr(" Map: Could not find map {" +key+"}");
             }
         }
 

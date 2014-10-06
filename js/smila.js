@@ -513,7 +513,7 @@ window.Smila = function () {
                 }
             }
         }
-    }
+    };
 
     Map.prototype.onReady = function (callback) {
         if (this.isready) callback();
