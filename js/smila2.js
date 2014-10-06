@@ -6,14 +6,14 @@
  * Date: 23.01.14
  * Time: 23:00
  */
-window.Smila = function () {
+Smila = function () {
 
     if (!window.CanvasRenderingContext2D) {
         throw logStr("Smila-Rendering is not supported by the browser! (#1)");
     }
 
-    if (!isDefined(performance) && !isDefined(performance.now)){
-        throw logStr("Smila-Rendering is not supported by the browser! (#2)");
+    function isDefined(obj) {
+        return typeof obj !== 'undefined';
     }
 
     var VERBOSE = true;
@@ -28,10 +28,6 @@ window.Smila = function () {
         }
     }
 
-    function isDefined(obj) {
-        return typeof obj !== 'undefined';
-    }
-
     var Smila = {
         log : log,
         isDefined : isDefined,
@@ -43,7 +39,6 @@ window.Smila = function () {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     var EXPECTED_ELAPSED_MILLIS = Math.floor(1000 / 60);
-
     /**
      *
      * @params domId {String} where to put the canvas
@@ -55,6 +50,7 @@ window.Smila = function () {
      * @type {Renderer}
      */
     var Renderer = Smila.Renderer = function(domId, options){
+
         if (!isDefined(options)) {
             options = {};
         }
@@ -697,6 +693,7 @@ window.Smila = function () {
             img.src = spriteData.src;
         }
     };
+
 
     return Smila;
 }();
