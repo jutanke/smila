@@ -417,7 +417,7 @@ Smila = function () {
     };
 
     function BOUNCE_UPDATE() {
-        if (this.pointer == 0) this.forward = true;
+        if (this.pointer === 0) this.forward = true;
         else if (this.pointer === (this.frames.length - 1)) this.forward = false;
         if (this.forward) this.pointer += 1;
         else this.pointer -= 1;
@@ -505,6 +505,8 @@ Smila = function () {
         ENDLESS:2
     };
 
+    Object.freeze(Animation.Type);
+
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Uniform Sprite
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -525,6 +527,7 @@ Smila = function () {
     var Entity = Smila.Entity = function(canvas, options){
         if (!isDefined(options)) throw logStr("Entity needs options");
         if (!isDefined(options.animations)) throw logStr("Entity needs animations");
+        this.forward = true;
         this.frames = [];
         this.pointer = 0;
         this.elapsedTime = 0;
@@ -565,6 +568,7 @@ Smila = function () {
             this.subimage(frames[0].ux, frames[0].uy);
         } else {
             var current = frames[this.pointer];
+            console.log(" >" + this.pointer + " q " + current); 
             this.subimage(current.ux, current.uy);
             if (this.elapsedTime >= current.time) {
                 this.elapsedTime = 0;
@@ -648,7 +652,9 @@ Smila = function () {
 
         get : function(key, options){
             if (key in spriteCache) {
-                return new Sprite(spriteCache[key], options);
+                var r = new Sprite(spriteCache[key], options);
+                Object.seal(r);
+                return r;
             } else {
                 throw logStr("Could not find key {" + key + "}");
             }
@@ -664,7 +670,9 @@ Smila = function () {
 
         getAnimation : function(key, options){
             if (key in spriteCache) {
-                return new Animation(spriteCache[key], options);
+                var r = new Animation(spriteCache[key], options);
+                Object.seal(r);
+                return r;
             } else {
                 throw logStr("Could not find key {" + key + "}");
             }
@@ -672,7 +680,9 @@ Smila = function () {
 
         getUniform: function(key, options){
             if (key in spriteCache) {
-                return new UniformSprite(spriteCache[key], options);
+                var r = new UniformSprite(spriteCache[key], options);
+                Object.seal(r);
+                return r;
             } else {
                 throw logStr("Could not find key {" + key + "}");
             }
@@ -680,7 +690,9 @@ Smila = function () {
 
         getEntity: function(key, options){
             if (key in spriteCache) {
-                return new Entity(spriteCache[key], options);
+                var r = new Entity(spriteCache[key], options);
+                Object.seal(r);
+                return r;
             } else {
                 throw logStr("Could not find key {" + key + "}");
             }
