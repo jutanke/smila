@@ -1,13 +1,33 @@
-Smila
+#Smila
 
 - 2D-rendering-library
 
 Getting started:
 the Top-Left is 0|0
 
-#Old library (smila.js)
+New library (smila2.js) is recommended
+
+##API (smila2.js)
 
 ```javascript
+
+
+
+##API - Old library (smila.js)
+
+###HTML
+```html
+<div id="smila" style="width:340px;height:500px">
+</div>
+```
+
+###JavaScript
+```javascript
+// Create a View for rendering inside of the div "smila"
+var renderer = new Smila.Renderer("smila", {
+   trackMouse: true /* track the mouse */
+});
+```
 
 // start the renderer:
 Smila.Renderer.start();
