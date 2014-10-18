@@ -10,8 +10,7 @@ New library (smila2.js) is recommended
 ##API (smila2.js)
 ###HTML
 ```html
-<div id="smila" style="width:340px;height:500px">
-</div>
+<div id="smila" style="width:340px;height:500px"></div>
 ```
 ###JavaScript
 ```javascript
@@ -19,6 +18,67 @@ New library (smila2.js) is recommended
 var renderer = new Smila.Renderer("smila", {
    trackMouse: true /* track the mouse */
 });
+
+// let the rendering view show a loading screen
+renderer.loading(true);
+
+// removes the loading screen
+renderer.loading(false);
+
+Smila.DataStore.put([
+    {key:"character", src: "path/to/image.png"},
+    {key:"B", src: "path/to/image2.png"}
+], function(){
+    // gets called when all images are loaded
+    ...
+});
+
+// When everything is loaded...
+
+// load a uniform sprite with a 64x64 grid.
+var a = Smila.DataStore.getUniform("character", {w:64, h:64});
+
+// .. and set its position in px
+a.position(0,0);
+// .. and its subimage (in 64x64 coords)
+a.subimage(2,3);
+// .. and mirror it horizontally
+a.horizontalMirror(true);
+// .. and vertical
+a.verticalMirror(true);
+
+// Create a new Entity with a 64x64 grid and a dance-animation.
+// This object has all functions of the previous one (Uniform)
+var b = Smila.DataStore.getEntity("character", {w:64, h:64,
+    animations: {
+        dance : {
+            animationType : Smila.Animation.Type.BOUNCE,
+            frames: [
+                {ux:1, uy:1, time:250},
+                {ux:1, uy:0, time:250},
+                {ux:1, uy:2, time:250}
+            ]
+        }
+    }
+});
+// play the dance animation
+b.animate("dance");
+
+// to actually show the sprites they must be added to the renderer:
+renderer.add(a);
+renderer.add(b);
+
+// jump the viewport (topleft) to this position:
+renderer.camera().set(100,120);
+
+// hook into the update loop
+// every renderer can only have one single hook!
+renderer.onUpdate = function(dt, elapsed){
+    ...
+    // translate the camera
+    renderer.camera().translate(1,1);
+};
+
 ```
 
 ##API - Old library (smila.js)
