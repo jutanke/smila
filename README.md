@@ -5,6 +5,8 @@ Smila
 Getting started:
 the Top-Left is 0|0
 
+#Old library (smila.js)
+
 ```javascript
 
 // start the renderer:
