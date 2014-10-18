@@ -16,12 +16,14 @@ New library (smila2.js) is recommended
 ##API - Old library (smila.js)
 
 ###HTML
+
 ```html
 <div id="smila" style="width:340px;height:500px">
 </div>
 ```
 
 ###JavaScript
+
 ```javascript
 // Create a View for rendering inside of the div "smila"
 var renderer = new Smila.Renderer("smila", {
