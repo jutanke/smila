@@ -65,6 +65,7 @@
 
             renderer.loading(false);
             var map = Smila.MapLoader.get("map1");
+            console.log(map);
             renderer.putPkmnMap(map);
 
             var a = Smila.DataStore.getUniform("character", {w: 64, h:64});

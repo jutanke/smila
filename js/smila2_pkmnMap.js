@@ -246,6 +246,15 @@
         }
     };
 
+    /**
+     *
+     * @param x
+     * @param y
+     */
+    Map.prototype.getEvent = function(x,y){
+        return this.eventLayer[x][y];
+    };
+
     function _mapLayerToCanvas(layer,canvasMatrix, tileset, tilewidth, tileheight, width,subtileWidth,subtileHeight){
         var sec = null; // currently only 2 extra layers are supported
         if (Array.isArray(layer)){

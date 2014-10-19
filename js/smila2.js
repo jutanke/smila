@@ -568,7 +568,6 @@ Smila = function () {
             this.subimage(frames[0].ux, frames[0].uy);
         } else {
             var current = frames[this.pointer];
-            console.log(" >" + this.pointer + " q " + current); 
             this.subimage(current.ux, current.uy);
             if (this.elapsedTime >= current.time) {
                 this.elapsedTime = 0;
