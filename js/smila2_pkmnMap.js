@@ -1,5 +1,14 @@
 /**
- * Created by Baka on 10/5/2014.
+ * Library essz:
+ * https://github.com/justayak/essz/blob/master/js/essz2.min.js
+ */
+(function(e){var f=e.BitMatrix2D=function(a,c){var b=a%8;0!==b&&(a=a+8-b);a=Math.ceil(a/8);b=new ArrayBuffer(a*c);this.data=new Uint8Array(b);this.bytePerRow=a;this.h=c};f.prototype.set=function(a,c){var b=this.bytePerRow*c,d=a/8,b=b+(d|d),d=this.data[b];this.data[b]=d|1<<a%8;return this};f.prototype.clear=function(a,c){var b=this.bytePerRow*c,d=a/8,b=b+(d|d),d=this.data[b];this.data[b]=d&~(1<<a%8);return this};f.prototype.test=function(a,c){var b=this.bytePerRow*c,d=a/8;return 0!==(this.data[b+(d|
+    d)]&1<<a%8)};f.prototype.debug=function(a){"undefined"===typeof a&&(a={});var c=a.lineBreak||"\n";a=a.bit4||"";for(var b="",d=0;d<this.h;d++){for(var g=0;g<8*this.bytePerRow;g++)0===g%8?b+=" ":0===g%4&&(b+=a),b+=this.test(g,d)?"1":"0";b+=c}return b};e=e.IntMatrix2D=function(a,c){var b=new ArrayBuffer(a*c*4);this.data=new Int32Array(b);this.w=a;this.h=c};e.prototype.get=function(a,c){return this.data[c*this.w+a]};e.prototype.set=function(a,c,b){this.data[c*this.w+a]=b;return this};e.prototype.setField=
+    function(a,c,b,d,g){for(var e=this.data,k=this.w,f=0;f<d;f++)for(var h=0;h<b;h++)e[(c+f)*k+(a+h)]=g};e.prototype.hasValue=function(a,c,b,d,g){if(void 0===d||void 0===g||1===d&&1===g)return this.get(c,b)===a;for(var e=0;e<g;e++)for(var f=0;f<d;f++)if(this.get(c+f,b+e)===a)return!0;return!1};e.prototype.debug=function(){for(var a="",c=-1;c<this.h;c++){for(var b=-1;b<this.w;b++)a=-1===c&&-1===b?"\t\t":-1===c?a+("|\t<"+b+">\t"):-1===b?a+("|\t<"+c+">\t"):a+("|\t"+this.data[c*this.w+b]+"\t");a+="\n"}return a}})("undefined"===
+    typeof exports?this.essz={}:exports);
+
+/**
+ * Created by Julian on 10/5/2014.
  */
 (function(){
 
@@ -359,5 +368,27 @@
         xobj.open("GET", mapData.src, true);
         xobj.send(null);
     }
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // MapEntity
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    var MapEntity = Smila.MapEntity = function(canvas, options){
+        Smila.MapEntity.call(this,canvas,options);
+        this.mx = 0;
+        this.my = 0;
+
+    };
+
+    MapEntity.prototype = Object.create(Smila.MapEntity.prototype);
+
+    /**
+     *
+     * @param x {Integer}
+     * @param y {Integer}
+     */
+    MapEntity.prototype.put = function(x,y){
+
+    };
 
 })();
