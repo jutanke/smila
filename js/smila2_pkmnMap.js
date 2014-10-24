@@ -99,6 +99,7 @@
             firstgid: ts.firstgid
         };
         this.sprites = [];
+        this.movement = new essz.BitMatrix2D(this.w, this.h);
         var self = this;
         var key = ts.name;
         Smila.DataStore.put({
@@ -200,9 +201,12 @@
                             data = eventDataLookup[key];
                         }
                         map.eventLayer[x][y] = {
-                            id : events[i] - eventFGID,
+                            id : value,
                             data : data
                         };
+                        if (value === 1){
+                            map.movement.set(x,y);
+                        }
                     }
                 }
             }
