@@ -379,20 +379,96 @@
 
     var MapEntity = Smila.MapEntity = function(canvas, options){
         Smila.MapEntity.call(this,canvas,options);
+        if (typeof options.map === "undefined") throw logStr("MapEntity needs a map");
         this.mx = 0;
         this.my = 0;
-
+        this.map = options.map;
     };
 
     MapEntity.prototype = Object.create(Smila.MapEntity.prototype);
 
     /**
      *
-     * @param x {Integer}
-     * @param y {Integer}
+     * @param x
+     * @param y
+     * @returns {boolean}
      */
     MapEntity.prototype.put = function(x,y){
-
+        if (this.map.movement.test(x,y)){
+            this.mx = -1;
+            this.my = -1;
+            return false;
+        } else {
+            this.my = y;
+            this.mx = x;
+            this.map.movement.clear(x,y);
+            return true;
+        }
     };
+
+    MapEntity.Directions = {
+        Up : 0,
+        Down : 1,
+        Left : 2,
+        Right : 3
+    };
+
+    MapEntity.prototype.move = function(direction){
+        var x = this.mx;
+        var y = this.my;
+        var ny, nx;
+        var movement = this.map.movement;
+        switch (direction){
+            case MapEntity.Directions.Up:
+                if (y > 0){
+                    ny = y - 1;
+                    if (!movement.test(x, ny)){
+                        movement.clear(x,y);
+                        movement.set(x,ny);
+                        this.my = ny;
+                        return true;
+                    }
+                }
+                return false;
+            case MapEntity.Directions.Down:
+                if (y < (this.map.h - 1)) {
+                    ny = y + 1;
+                    if (!movement.test(x,ny)){
+                        movement.clear(x,y);
+                        movement.set(x,ny);
+                        this.my = ny;
+                        return true;
+                    }
+                }
+                return false;
+            case MapEntity.Directions.Left:
+                if (x > 0) {
+                    nx = x - 1;
+                    if (!movement.test(nx,y)){
+                        movement.clear(x,y);
+                        movement.set(nx,y);
+                        this.mx = nx;
+                        return true;
+                    }
+                }
+                return false;
+                break;
+            case MapEntity.Directions.Right:
+                if (x < (this.map.w - 1)){
+                    nx = x + 1;
+                    if (!movement.test(nx,y)){
+                        movement.clear(x,y);
+                        movement.set(nx,y);
+                        this.mx = nx;
+                        return true;
+                    }
+                }
+                return false;
+                break;
+            default :
+                throw logStr("direction not included: " + direction);
+                break;
+        }
+    }
 
 })();
