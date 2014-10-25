@@ -243,6 +243,7 @@ Smila = function () {
 
     Renderer.prototype.putPkmnMap = function(map){
         this.pkmnMap = map;
+        map.onMapPut.call(map, this);
     };
 
     /**
@@ -373,7 +374,13 @@ Smila = function () {
         else if (mirrory) context.scale(-1,1);
         else if (mirrorx) context.scale(1,-1);
 
+        //try{
         context.drawImage(this.img,this.ox,this.oy,w,h,-wh,-hh,w,h);
+        //} catch(e){
+        //    log(e + " {" +this.ox + "|" + this.oy + "}");
+        //    console.log(this.img);
+        //}
+
 
         if (mirrory && mirrorx) context.scale(1,1);
         else if (mirrory) context.scale(-1,1);
@@ -695,6 +702,10 @@ Smila = function () {
             } else {
                 throw logStr("Could not find key {" + key + "}");
             }
+        },
+
+        getSpriteCache: function(){
+            return spriteCache
         }
     };
 

@@ -93,6 +93,8 @@
         this.w = json.width;
         this.h = json.height;
         var ts = json.tilesets[0];
+        this.waitingForRenderer = [];
+        this.renderer = null;
         var tileSetOptions = {
             w : json.tilewidth,
             h : json.tileheight,
@@ -147,6 +149,19 @@
             }
         };
 
+    };
+
+    /**
+     * Gets called when the map is put to a renderer
+     */
+    Map.prototype.onMapPut = function(renderer){
+        this.renderer = renderer;
+        // TODO: Implement that MapEntities get added to the renderer...
+        var a = this.waitingForRenderer.pop();
+        while(a){
+            this.renderer.add(a);
+            a = this.waitingForRenderer.pop();
+        }
     };
 
     /**
@@ -257,6 +272,22 @@
                 }
             }
         }
+    };
+
+    Map.prototype.createEntity = function(key, options){
+        options.map = this;
+        if (key in Smila.DataStore.getSpriteCache()){
+            var e = new MapEntity(Smila.DataStore.getSpriteCache()[key], options);
+            if (this.renderer === null){
+                this.waitingForRenderer.push(e);
+            } else {
+                this.renderer.add(e);
+            }
+            return e;
+        }else{
+            throw logStr("Could not find key {" + key + "}");
+        }
+
     };
 
     /**
@@ -378,14 +409,24 @@
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     var MapEntity = Smila.MapEntity = function(canvas, options){
-        Smila.MapEntity.call(this,canvas,options);
+        Smila.Entity.call(this,canvas,options);
         if (typeof options.map === "undefined") throw logStr("MapEntity needs a map");
         this.mx = 0;
         this.my = 0;
         this.map = options.map;
     };
 
-    MapEntity.prototype = Object.create(Smila.MapEntity.prototype);
+    MapEntity.prototype = Object.create(Smila.Entity.prototype);
+
+    MapEntity.prototype.mapPosition = function(mx,my){
+        if(arguments.length > 0) {
+            this.mx = mx;
+            this.my = my;
+            this.position(this.w * mx, this.h*my);
+        } else {
+            return {x:this.mx, y:this.my};
+        }
+    };
 
     /**
      *
@@ -395,12 +436,10 @@
      */
     MapEntity.prototype.put = function(x,y){
         if (this.map.movement.test(x,y)){
-            this.mx = -1;
-            this.my = -1;
+            //this.mapPosition(-1,-1)
             return false;
         } else {
-            this.my = y;
-            this.mx = x;
+            this.mapPosition(x,y);
             this.map.movement.clear(x,y);
             return true;
         }
@@ -425,7 +464,7 @@
                     if (!movement.test(x, ny)){
                         movement.clear(x,y);
                         movement.set(x,ny);
-                        this.my = ny;
+                        this.mapPosition(x,ny);
                         return true;
                     }
                 }
@@ -436,7 +475,7 @@
                     if (!movement.test(x,ny)){
                         movement.clear(x,y);
                         movement.set(x,ny);
-                        this.my = ny;
+                        this.mapPosition(x,ny);
                         return true;
                     }
                 }
@@ -447,7 +486,7 @@
                     if (!movement.test(nx,y)){
                         movement.clear(x,y);
                         movement.set(nx,y);
-                        this.mx = nx;
+                        this.mapPosition(nx,y);
                         return true;
                     }
                 }
@@ -459,7 +498,7 @@
                     if (!movement.test(nx,y)){
                         movement.clear(x,y);
                         movement.set(nx,y);
-                        this.mx = nx;
+                        this.mapPosition(nx,y);
                         return true;
                     }
                 }

@@ -92,6 +92,18 @@
             renderer.add(a);
             renderer.add(b);
 
+            var user = map.createEntity("character", {w:64, h:64, animations: {
+                dance : {
+                    animationType : Smila.Animation.Type.BOUNCE,
+                    frames : [
+                        {ux: 1, uy: 1, time: 250},
+                        {ux: 1, uy: 0, time: 250},
+                        {ux: 1, uy: 2, time: 250}
+                    ]
+                }
+            }});
+            console.log(user.put(1,1));
+
             var q;
             for (var i = 0; i < 100; i++) {
                 q = Smila.DataStore.getEntity("character", {
