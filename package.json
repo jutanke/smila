@@ -7,7 +7,8 @@
   "description": "- 2D-rendering-library",
   "main": "lib/main.js",
   "scripts": {
-    "test": "jasmine-node spec"
+    "test": "jasmine-node spec",
+    "debug": "browserify lib/main.js --debug --s Smila > build/smila.bundle.debug.js"
   },
   "repository": {
     "type": "git",
