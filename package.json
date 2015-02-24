@@ -1,14 +1,11 @@
 {
   "name": "smila",
   "version": "0.0.1",
-  "devDependencies": {
-    "grunt": "*"
-  },
-  "description": "- 2D-rendering-library",
+  "description": "canvas, 2D-rendering-library",
   "main": "lib/main.js",
   "scripts": {
     "test": "jasmine-node spec",
-    "debug": "browserify lib/main.js --debug --s Smila > build/smila.bundle.debug.js"
+    "debug": "browserify lib/Smila.js --debug --s Smila > build/smila.bundle.debug.js"
   },
   "repository": {
     "type": "git",
