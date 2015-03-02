@@ -7,11 +7,17 @@
 </head>
 <body>
     Demo
+    <div id="demo" style="height:200px; width:400px;">
+
+    </div>
 </body>
 <script>
     window.onload = function () {
         var scene = Smila.sceneLoader().create("one", {});
         scene.play();
+
+        var renderer = Smila.renderer("demo", {verbose: true});
+
     }
 </script>
 </html>
