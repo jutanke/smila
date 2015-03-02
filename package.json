@@ -24,8 +24,7 @@
     "url": "https://github.com/justayak/smila/issues"
   },
     "dependencies": {
-        "yutils" : ">=0.0.10",
-        "future-callbacks": "*"
+        "yutils" : ">=0.0.10"
     },
     "devDependencies" : {
         "jasmine-node" : "1.3.1"
