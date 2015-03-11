@@ -2,7 +2,7 @@
   "name": "smila",
   "version": "0.0.1",
   "description": "canvas, 2D-rendering-library",
-  "main": "lib/main.js",
+  "main": "lib/Smila.js",
   "scripts": {
     "test": "jasmine-node spec",
     "debug": "browserify lib/Smila.js --debug --s Smila > build/smila.bundle.debug.js",
@@ -24,8 +24,9 @@
     "url": "https://github.com/justayak/smila/issues"
   },
     "dependencies": {
-        "future-callbacks" : "0.0.3",
-        "concurrentjs": "0.0.1"
+        "future-callbacks" : "0.0.5",
+        "concurrentjs": "0.0.1",
+        "yutils" : "0.0.10"
     },
     "devDependencies" : {
         "jasmine-node" : "1.3.1"
