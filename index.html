@@ -14,7 +14,10 @@
 <script>
     window.onload = function () {
         var scene = Smila.sceneLoader().create("one", {});
-        scene.play();
+        scene.onready(function () {
+            scene.play();
+        });
+
 
         var renderer = Smila.renderer("demo", {verbose: true});
 
