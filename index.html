@@ -31,6 +31,10 @@ Demo
                 });
 
                 renderer.putScene(scene);
+
+                var sprite = Smila.dataStore().getSprite("character", 64, 64);
+                scene.addRenderItem(sprite);
+                sprite.position(0,0);
             });
         });
 
