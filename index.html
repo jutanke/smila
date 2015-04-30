@@ -6,20 +6,33 @@
     <script src="build/smila.bundle.debug.js"></script>
 </head>
 <body>
-    Demo
-    <div id="demo" style="height:300px; width:400px;">
+Demo
+<div id="demo" style="height:300px; width:400px;">
 
-    </div>
+</div>
 </body>
 <script>
     window.onload = function () {
-        var scene = Smila.sceneLoader().create("one", {});
-        scene.onready(function () {
-            scene.play();
+
+        Smila.dataStore().put({key: "character", src: "res/img/character.png"}).success(function () {
+
+            var renderer = Smila.renderer("demo", {verbose: true});
+
+            var scene = Smila.sceneLoader().create("one", {});
+
+            scene.onready(function () {
+
+                scene.onrendererattached(function (renderer) {
+                    console.log("renderer attached: ", renderer);
+                });
+
+                scene.onrendererdetached(function (renderer) {
+                    console.log("renderer detached: ", renderer);
+                });
+
+                renderer.putScene(scene);
+            });
         });
-
-
-        var renderer = Smila.renderer("demo", {verbose: true});
 
     }
 </script>
