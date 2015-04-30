@@ -32,4 +32,29 @@ describe("Scene", function () {
         expect(scene.renderItems.length).toBe(1);
     });
 
+    it("should insert a map", function () {
+        var map = {
+            renderFront: function() {},
+            getRenderItems: function() {return [];},
+            renderBack: function() {}
+
+        };
+        var scene = new Scene("a", {map:map});
+        expect(scene.map).toBe(map);
+    });
+
+    it("should not insert a broken map", function () {
+        var map = {
+            renderFront: function() {},
+            renderBack: function() {}
+        };
+        try {
+            var scene = new Scene("a", {map: map});
+        } catch (e) {
+            expect(5).toBe(5);
+            return;
+        }
+        expect(5).toBe(1);
+    });
+
 });
