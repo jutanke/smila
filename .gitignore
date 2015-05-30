@@ -1,0 +1,5 @@
+node_modules
+bower_components
+browser-bundle.js
+npm-debug.log
+!lib/.gitkeep
