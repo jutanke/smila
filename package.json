@@ -25,6 +25,7 @@
   },
     "dependencies": {
         "future-callbacks" : "0.0.5",
+	"touchController": "0.0.1",
         "concurrentjs": "0.0.1",
         "yutils" : "0.0.11"
     },
