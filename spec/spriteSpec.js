@@ -4,7 +4,7 @@ describe("Sprite", function () {
 
     it("should have correct settings", function () {
 
-        var sprite = new Sprite({
+        var sprite = new Sprite(null, {
           "w": 10,
           "h": 15
         });

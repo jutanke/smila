@@ -5,7 +5,7 @@
   "main": "lib/Smila.js",
   "scripts": {
     "test": "jasmine-node spec",
-    "debug": "browserify lib/Smila.js --debug --s Smila > build/smila.bundle.debug.js",
+    "debug": "browserify lib/Smila.js --debug --wrap --s Smila > build/smila.bundle.debug.js",
     "build": "browserify lib/Smila.js --s Smila | uglifyjs > build/smila.bundle.js"
   },
   "repository": {
