@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <title></title>
     <script src="build/smila.bundle.debug.js"></script>
-    <script src="libs/stats2.js"></script>
-    <script src="libs/touchController.js"></script>
+    <!--script src="libs/stats2.js"></script>
+    <script src="libs/touchController.js"></script-->
 </head>
 <body>
 Test
@@ -18,55 +18,7 @@ Test
 <script>
     window.onload = function () {
 
-        var dpad = new TouchController.DPad(
-                "dpad",
-                {bottom: 10, left: 5, WASDEvents: true}
-        );
-
-        Smila.dataStore().put({key: "character", src: "res/img/character.png"}).success(function () {
-
-            var renderer = Smila.renderer("demo", {verbose: true});
-
-            var scene = Smila.sceneLoader().create("one", {});
-
-            scene.onready(function () {
-
-                scene.onrendererattached(function (renderer) {
-                    console.log("renderer attached: ", renderer);
-                });
-
-                scene.onrendererdetached(function (renderer) {
-                    console.log("renderer detached: ", renderer);
-                });
-
-                renderer.putScene(scene);
-
-                var sprite = Smila.dataStore().getSprite("character", 64, 64);
-                scene.addRenderItem(sprite);
-                sprite.position(50, 50);
-            });
-
-            scene.onrender(function (camera) {
-                var direction = dpad.getDirection();
-                switch (direction) {
-                    case TouchController.DPad.DOWN:
-                        camera.translate(0,1);
-                        break;
-                    case TouchController.DPad.UP:
-                        camera.translate(0,-1);
-                        break;
-                    case TouchController.DPad.LEFT:
-                        camera.translate(-1,0);
-                        break;
-                    case TouchController.DPad.RIGHT:
-                        camera.translate(1,0);
-                        break;
-                    case TouchController.DPad.NONE:
-                        camera.translate(0,0);
-                        break;
-                }
-            });
-        });
+      Smila.debug("qq");
 
     }
 </script>
