@@ -1,4 +1,4 @@
-#Smila
+# Smila
 
 - 2D-rendering-library
 
@@ -7,12 +7,12 @@ the Top-Left is 0|0
 
 New library (smila2.js) is recommended
 
-##API (smila2.js)
-###HTML
+## API (smila2.js)
+### HTML
 ```html
 <div id="smila" style="width:340px;height:500px"></div>
 ```
-###JavaScript
+### JavaScript
 ```javascript
 // Create a View for rendering inside of the div "smila"
 var renderer = new Smila.Renderer("smila", {
@@ -81,7 +81,7 @@ renderer.onUpdate = function(dt, elapsed){
 
 ```
 
-##API - Old library (smila.js)
+## API - Old library (smila.js)
 ```javascript
 // start the renderer:
 Smila.Renderer.start();
